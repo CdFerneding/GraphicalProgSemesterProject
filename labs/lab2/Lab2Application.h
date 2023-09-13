@@ -1,0 +1,10 @@
+#ifndef PROG2002_LAB2APPLICATION_H
+#define PROG2002_LAB2APPLICATION_H
+
+
+class Lab2Application {
+
+};
+
+
+#endif //PROG2002_LAB2APPLICATION_H

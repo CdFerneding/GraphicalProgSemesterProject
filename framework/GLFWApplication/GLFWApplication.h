@@ -1,0 +1,10 @@
+#ifndef PROG2002_GLFWAPPLICATION_H
+#define PROG2002_GLFWAPPLICATION_H
+
+
+class GLFWApplication {
+
+};
+
+
+#endif //PROG2002_GLFWAPPLICATION_H

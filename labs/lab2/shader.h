@@ -1,0 +1,4 @@
+#ifndef PROG2002_SHADER_H
+#define PROG2002_SHADER_H
+
+#endif //PROG2002_SHADER_H
