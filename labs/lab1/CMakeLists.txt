@@ -18,3 +18,4 @@ add_executable(lab1 main.cpp)   # Generate an executable named HelloWorld from m
 
 # issue 2: creating a simple OpenGL application
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw glad OpenGL::GL linmath)
