@@ -4,11 +4,9 @@
 
 GLFWApplication::~GLFWApplication() = default;
 
-GLFWApplication::GLFWApplication(const std::string &name, const std::string &version): name(name), version(version) {
+GLFWApplication::GLFWApplication(const std::string &name, const std::string &version, unsigned int width, unsigned int height): name(name), version(version), width(width), height(height) {
     window = nullptr;
     program = 0;
-    width = 800;
-    height = 600;
 }
 
 unsigned int GLFWApplication::Init() {

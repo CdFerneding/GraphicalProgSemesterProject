@@ -10,7 +10,7 @@
 class GLFWApplication
 {
 public:
-    GLFWApplication(const std::string &name, const std::string &version);
+    explicit GLFWApplication(const std::string &name = "GLFWApplication", const std::string &version = "0.0.1", unsigned int width = 800, unsigned int height = 600);
     ~GLFWApplication();
 
     // Initialization
