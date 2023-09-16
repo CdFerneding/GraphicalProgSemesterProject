@@ -1,125 +1,134 @@
-// #include <iostream>
-
-//int main(int argc, char** argv)
-//{
-//	std::cout << "Hello World!" << std::endl;
-//	std::cin.get();
-//	return EXIT_SUCCESS;
-//}
-
-
-// #include area (SECTION 1)
-#define EXIT_SUCCESS 0
-#define EXIT_FAILURE 1
-#define GLFW_INCLUDE_NONE
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <iostream>
 #include <string>
 
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
 
 int main(int argc, char** argv)
 {
-	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-	// GLFW initialization code (SECTION 2)
+    // Initialize GLFW
+    if (glfwInit() == GLFW_FALSE) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return EXIT_FAILURE;
+    }
 
-	// OpenGL initialization code (SECTION 3)
-	if (glfwInit() == GLFW_FALSE) return EXIT_FAILURE;
-	auto window = glfwCreateWindow(800, 600, "I'm a window", NULL, NULL);
-	// glfwWindowHint(int hint, int value);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwMakeContextCurrent(window);
+    // GLFW window hints
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
-	// OpenGL data transfer code (SECTION 4)
-	float triangle[3 * 2] = { // 3 vertices x 2 coordinate components
-		-0.5f, -0.5f,
-		0.5f, -0.5f,
-		0.0f,  0.5f
-	};
+    // Create a GLFW window
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Triangle", nullptr, nullptr);
+    if (!window) {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
 
-	// Create a vertex array (transfer the triangle from CPU to GPU). VAO (Vertex Array Object):
-	GLuint vertexArrayId;
-	glGenVertexArrays(1, &vertexArrayId);
-	glBindVertexArray(vertexArrayId);
+    // Make the window's context current
+    glfwMakeContextCurrent(window);
 
-	// Create a vertex buffer. VBO (Vertex Buffer Object):
-	GLuint vertexBufferId;
-	glGenBuffers(1, &vertexBufferId);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
+    // Load OpenGL functions with GLAD
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cerr << "Failed to initialize GLAD" << std::endl;
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
 
-	// Populate the vertex buffer
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
+    // Vertex data for a triangle
+    float triangle[3 * 2] = {
+        -0.5f, -0.5f,
+        0.5f, -0.5f,
+        0.0f,  0.5f
+    };
 
-	// Set the layout of the bound buffer
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
-	glEnableVertexAttribArray(0);
+    // Create a vertex array object (VAO)
+    GLuint vertexArrayId;
+    glGenVertexArrays(1, &vertexArrayId);
+    glBindVertexArray(vertexArrayId);
 
-	// Shaders:
+    // Create a vertex buffer object (VBO)
+    GLuint vertexBufferId;
+    glGenBuffers(1, &vertexBufferId);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
 
-	const std::string vertexShaderSrc = R"(
-#version 430 core
+    // Define the vertex attribute layout
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
+    glEnableVertexAttribArray(0);
 
-layout(location = 0) in vec2 position;
+    // Vertex and fragment shader source code
+    const std::string vertexShaderSrc = R"(
+        #version 430 core
+        layout(location = 0) in vec2 position;
+        void main()
+        {
+            gl_Position = vec4(position, 0.0, 1.0);
+        }
+    )";
 
-void main()
-{
-  gl_Position = vec4(position, 0.0, 1.0); // Homogeneous coordinates 3D+1
-}
-)";
+    const std::string fragmentShaderSrc = R"(
+        #version 430 core
+        out vec4 color;
+        void main()
+        {
+            color = vec4(1.0, 1.0, 1.0, 1.0);
+        }
+    )";
 
-	const std::string fragmentShaderSrc = R"(
-#version 430 core
+    // Compile the vertex shader
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    const GLchar* vss = vertexShaderSrc.c_str();
+    glShaderSource(vertexShader, 1, &vss, nullptr);
+    glCompileShader(vertexShader);
 
-out vec4 color;
-void main()
-{
-  color = vec4(1.0, 1.0, 1.0, 1.0);
-}
-)";
+    // Compile the fragment shader
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    const GLchar* fss = fragmentShaderSrc.c_str();
+    glShaderSource(fragmentShader, 1, &fss, nullptr);
+    glCompileShader(fragmentShader);
 
-	// Compile the vertex shader
-	auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	const GLchar* vss = vertexShaderSrc.c_str();
-	glShaderSource(vertexShader, 1, &vss, nullptr);
-	glCompileShader(vertexShader);
+    // Create a shader program
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
 
-	// Compile the fragment shader
-	auto fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	const GLchar* fss = fragmentShaderSrc.c_str();
-	glShaderSource(fragmentShader, 1, &fss, nullptr);
-	glCompileShader(fragmentShader);
+    // Check shader program linking status
+    GLint success;
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cerr << "Shader program linking failed: " << infoLog << std::endl;
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
 
-	// Create a shader program
-	auto shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
+    // Clean up shader objects
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 
-	glLinkProgram(shaderProgram);
+    // Use the shader program
+    glUseProgram(shaderProgram);
 
-	// Shader objects can be deleted once they 
-// have been linked in a shader program
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+    while (!glfwWindowShouldClose(window))
+    {
+        // Clear the screen
+        glClear(GL_COLOR_BUFFER_BIT);
 
-	glUseProgram(shaderProgram);
+        // Draw the triangle
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
-	// drawing the triangle
-	glClearColor(0.5f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-	glfwSwapBuffers(window);
+        // Swap front and back buffers
+        glfwSwapBuffers(window);
 
+        // Poll for and process events
+        glfwPollEvents();
+    }
 
-	// Application loop code (SECTION 5)
-	while (!glfwWindowShouldClose(window))
-	{
-		glfwPollEvents();
-		// Keep the application running
-	}
-
-	// Termination code (SECTION 6)
-	glfwTerminate();
-	glfwDestroyWindow(window);
-
-	return EXIT_SUCCESS;
+    // Clean up GLFW and exit
+    glfwTerminate();
+    return EXIT_SUCCESS;
 }
