@@ -1,5 +1,6 @@
 #include "GLFWApplication.h"
 #include "glad/glad.h"
+#include <iostream>
 
 
 GLFWApplication::~GLFWApplication() = default;
@@ -10,15 +11,31 @@ GLFWApplication::GLFWApplication(const std::string &name, const std::string &ver
 }
 
 unsigned int GLFWApplication::Init() {
-    gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-    // GLFW initialization code (SECTION 2)
-
-    // OpenGL initialization code (SECTION 3)
-    if (glfwInit() == GLFW_FALSE) return EXIT_FAILURE;
-    window = glfwCreateWindow(width, height, (name+" - "+version).c_str(), NULL, NULL);
+    // Initialize GLFW (Graphics Lbrary Framework)
+    if (glfwInit() == GLFW_FALSE) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return EXIT_FAILURE;
+    }
+    // GLFW window hints
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    // Create a GLFW window
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Triangle", nullptr, nullptr);
+    if (!window) {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+
+    // Make the window's context current
     glfwMakeContextCurrent(window);
+
+    // Load OpenGL functions with GLAD
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cerr << "Failed to initialize GLAD" << std::endl;
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
 

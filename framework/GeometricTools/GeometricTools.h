@@ -12,7 +12,6 @@ namespace GeometricTools {
 
     constexpr std::array<unsigned int, 3*2> UnitGridTopologyTriangles = {0, 1, 2, 0, 2, 3}; // [2,3]
 
-
 }
 
 

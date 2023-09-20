@@ -12,7 +12,6 @@ project(lab2)
 # 'main.cpp' and link it into an executable program named 'tuto_lab1_glfw'.
 add_executable(lab2 main.cpp Lab2Application.h Lab2Application.cpp shader.h)
 
-
 # Specify libraries to link with the 'tuto_lab1_glfw' target.
 # This tells CMake that when it's linking 'tuto_lab1_glfw', it should also
 # link the following libraries:

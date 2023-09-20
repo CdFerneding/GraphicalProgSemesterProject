@@ -1,4 +1,5 @@
 #include "Lab2Application.h"
+#include "shader.h"
 
 Lab2Application::Lab2Application(const std::string &name, const std::string &version, unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
 
@@ -9,7 +10,13 @@ Lab2Application::~Lab2Application() {
 }
 
 unsigned Lab2Application::Init() {
-    return GLFWApplication::Init();
+    auto result = GLFWApplication::Init();
+
+
+    // Load shaders and setup buffer
+
+
+    return result;
 }
 
 unsigned Lab2Application::Run() const {
@@ -18,6 +25,10 @@ unsigned Lab2Application::Run() const {
     {
         glfwPollEvents();
         // Keep the application running
+
+
+
+
     }
     return 0;
 }

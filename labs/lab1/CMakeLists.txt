@@ -14,7 +14,7 @@ project(lab1)
 # and imported targets related to OpenGL that can be used later.
 find_package(OpenGL REQUIRED)
 
-add_executable(lab1 main.cpp)   # Generate an executable named HelloWorld from main.cpp [7]
+add_executable(lab1 main.cpp "main.cpp")   # Generate an executable named lab1 from main.cpp [7]
 
 # issue 2: creating a simple OpenGL application
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)

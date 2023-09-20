@@ -8,7 +8,8 @@
 
 int draw_triangle()
 {
-    // Initialize GLFW (Graphics Lbrary Framework)
+
+    // Initialize GLFW (Graphics Library Framework)
     if (glfwInit() == GLFW_FALSE) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return EXIT_FAILURE;

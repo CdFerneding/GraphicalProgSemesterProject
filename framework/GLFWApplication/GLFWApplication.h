@@ -6,6 +6,7 @@
 #include "GLFW/glfw3.h"
 
 #include <string>
+#include <iostream>
 
 class GLFWApplication
 {
@@ -14,12 +15,48 @@ public:
     ~GLFWApplication();
 
     // Initialization
-    virtual unsigned Init(); // Virtual function with default behavior.
+    virtual unsigned Init() // Virtual function with default behavior.
+    {
+        {
+            // Initialize GLFW (Graphics Lbrary Framework)
+            if (glfwInit() == GLFW_FALSE) {
+                std::cerr << "Failed to initialize GLFW" << std::endl;
+                return EXIT_FAILURE;
+            }
+            // GLFW window hints
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+            // Create a GLFW window
+            GLFWwindow* window = glfwCreateWindow(800, 600, "Triangle", nullptr, nullptr);
+            if (!window) {
+                std::cerr << "Failed to create GLFW window" << std::endl;
+                glfwTerminate();
+                return EXIT_FAILURE;
+            }
+
+            // Make the window's context current
+            glfwMakeContextCurrent(window);
+
+            // Load OpenGL functions with GLAD
+            if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+                std::cerr << "Failed to initialize GLAD" << std::endl;
+                glfwTerminate();
+                return EXIT_FAILURE;
+            }
+            return EXIT_SUCCESS;
+        }
+    }
 
     // Run function
     virtual unsigned Run() const = 0; // Pure virtual function that must be redefined.
 
-    virtual unsigned stop();
+    virtual unsigned stop()
+    {
+        glfwTerminate();
+        glfwDestroyWindow(window);
+
+        return EXIT_SUCCESS;
+    }
 
 protected:
     //...other functions...

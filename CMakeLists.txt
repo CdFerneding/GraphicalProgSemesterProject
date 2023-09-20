@@ -75,6 +75,8 @@ add_subdirectory(framework)
 add_subdirectory(labs/tuto_lab1_glfw)
 add_subdirectory(labs/lab2)
 add_subdirectory(labs/lab1)
+add_subdirectory(labs/interactive_chessboard)
+
 
 # Add a subdirectory for assignments. Like the framework, this is commented out,
 # potentially to be enabled later when assignments are ready.
