@@ -17,7 +17,7 @@ find_package(OpenGL REQUIRED)
 # Add an executable target named 'example_1' that is built from the source
 # file 'main.cpp'. This means that CMake will generate build rules to compile
 # 'main.cpp' and link it into an executable program named 'example_1'.
-add_library(Rendering Rendering.cpp
+add_library(Rendering VertexBuffer.cpp
         ShaderDataTypes.h
         IndexBuffer.cpp
         IndexBuffer.h)
