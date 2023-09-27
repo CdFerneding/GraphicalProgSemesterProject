@@ -18,7 +18,10 @@ find_package(OpenGL REQUIRED)
 # file 'main.cpp'. This means that CMake will generate build rules to compile
 # 'main.cpp' and link it into an executable program named 'example_1'.
 add_library(Rendering Rendering.cpp
-        ShaderDataTypes.h)
+        ShaderDataTypes.h
+        IndexBuffer.cpp
+        IndexBuffer.h)
+
 add_library(Framework::Rendering ALIAS Rendering)
 
 # Specify libraries to link with the 'example_1' target.

@@ -19,4 +19,4 @@ add_executable(lab2 main.cpp Lab2Application.h Lab2Application.cpp shader.h)
 # - glad: A library to load OpenGL extensions.
 # - OpenGL::GL: This is an imported target for the main OpenGL library
 #               provided by the find_package(OpenGL) command.
-target_link_libraries(${PROJECT_NAME} PRIVATE Framework::GLFWApplication glfw glad OpenGL::GL)
+target_link_libraries(${PROJECT_NAME} PRIVATE Framework::GLFWApplication Framework::Rendering glfw glad OpenGL::GL)
