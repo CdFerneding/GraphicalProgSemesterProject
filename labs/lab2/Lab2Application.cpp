@@ -37,9 +37,21 @@ GLuint CompileShader(const std::string& vertexShaderSrc,
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
+    // Check shader program linking status
+    GLint success;
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cerr << "Shader program linking failed: " << infoLog << std::endl;
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+
     // Clean up shader objects as they're no longer needed after linking
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+    glUseProgram(shaderProgram);
 
     return shaderProgram;
 }
@@ -65,9 +77,8 @@ unsigned Lab2Application::Run() const {
     // Define the vertex attribute layout of the bound buffer
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
     glEnableVertexAttribArray(0);
-
-    auto squareShaderProgram = CompileShader(vertexShaderSrc, fragmentShaderSrc);
-
+    glEnableVertexAttribArray(1);
+    GLuint squareShaderProgram = CompileShader(vertexShaderSrc, fragmentShaderSrc);
 
     while (!glfwWindowShouldClose(window))
     {
