@@ -3,11 +3,11 @@
 
 int main(int argc, char *argv[])
 {
-    Lab2Application application("Lab1", "1.0");
+    Lab2Application application("Lab1_withFramework", "1.0");
 
     application.Init();
 
-    // shapes, shaders, draw-loop is missing
+    application.Run();
 
-    return application.Run();
+    application.stop();
 }

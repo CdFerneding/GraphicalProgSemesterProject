@@ -3,8 +3,23 @@
 #include <iostream>
 #include <string>
 
+#include "./../GeometricTools/GeometricTools.h"
+
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
+
+int draw_triangle();
+int draw_square();
+
+int main(int argc, char** argv)
+{
+    if (1) {
+        draw_triangle();
+    }
+    if (0) {
+        draw_square();
+    }
+}
 
 int draw_triangle()
 {
@@ -37,12 +52,7 @@ int draw_triangle()
         return EXIT_FAILURE;
     }
 
-    // Vertex data for a triangle
-    float triangle[3 * 2] = { // 3 vertices x 2 coordinate components
-        -0.5f, -0.5f,
-        0.5f, -0.5f,
-        0.0f,  0.5f
-    };
+    auto triangle = GeometricTools::UnitTriangle2D; 
 
     // Create a vertex array object (VAO)
     GLuint vertexArrayId;
@@ -55,7 +65,7 @@ int draw_triangle()
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
 
     //populate the vertex buffer
-    glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * triangle.size(), triangle.data(), GL_STATIC_DRAW);
 
     // Define the vertex attribute layout of the bound buffer
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
@@ -135,6 +145,11 @@ int draw_triangle()
     glfwTerminate();
     return EXIT_SUCCESS;
 }
+
+
+//
+// drawing a square
+//
 
 int draw_square() {
 
@@ -268,15 +283,4 @@ int draw_square() {
     // Clean up GLFW and exit
     glfwTerminate();
     return EXIT_SUCCESS;
-}
-
-
-int main(int argc, char** argv)
-{
-    if (0) { 
-        draw_triangle(); 
-    }
-    if (1) {
-        draw_square();
-    }
 }

@@ -5,7 +5,7 @@
 
 GLFWApplication::~GLFWApplication() = default;
 
-GLFWApplication::GLFWApplication(const std::string &name, const std::string &version, unsigned int width, unsigned int height): name(name), version(version), width(width), height(height) {
+GLFWApplication::GLFWApplication(const std::string& name, const std::string& version, unsigned int width, unsigned int height) : name(name), version(version), width(width), height(height) {
     window = nullptr;
     program = 0;
 }
@@ -45,3 +45,6 @@ unsigned int GLFWApplication::stop() {
 
     return EXIT_SUCCESS;
 }
+
+
+

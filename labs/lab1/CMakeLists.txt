@@ -17,5 +17,4 @@ find_package(OpenGL REQUIRED)
 add_executable(lab1 main.cpp "main.cpp")   # Generate an executable named lab1 from main.cpp [7]
 
 # issue 2: creating a simple OpenGL application
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw glad OpenGL::GL linmath)
+target_link_libraries(${PROJECT_NAME} PRIVATE Framework::GLFWApplication glfw glad OpenGL::GL linmath)
