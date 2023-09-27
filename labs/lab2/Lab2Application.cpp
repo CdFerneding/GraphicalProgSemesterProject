@@ -1,6 +1,7 @@
 #include "Lab2Application.h"
 #include "shader.h"
-#include "./../GeometricTools/GeometricTools.h" 
+#include "./../GeometricTools/GeometricTools.h"
+#include "../../framework/Rendering/IndexBuffer.h"
 
 Lab2Application::Lab2Application(const std::string &name, const std::string &version, 
     unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
@@ -66,9 +67,14 @@ unsigned Lab2Application::Run() const {
     glBindVertexArray(vertexArrayId);
 
     // Create a vertex buffer object (VBO)
-    GLuint vertexBufferId;
-    glGenBuffers(2, &vertexBufferId);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
+
+    GLuint * indices = new GLuint();
+    IndexBuffer indexBuffer(indices, 2);
+    indexBuffer.Bind();
+
+    //GLuint vertexBufferId;
+    //glGenBuffers(2, &vertexBufferId);
+    //glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
 
     //populate the vertex buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * triangle.size(), triangle.data(), GL_STATIC_DRAW);
