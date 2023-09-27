@@ -2,6 +2,7 @@
 #include "shader.h"
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
+#include "./../Rendering/Rendering.h"
 
 Lab2Application::Lab2Application(const std::string &name, const std::string &version, 
     unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
@@ -58,7 +59,6 @@ GLuint CompileShader(const std::string& vertexShaderSrc,
 }
 
 unsigned Lab2Application::Run() const {
-
     auto triangle = GeometricTools::UnitTriangle2D;
 
     // Create a vertex array object (VAO)
@@ -83,21 +83,29 @@ unsigned Lab2Application::Run() const {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    
+    // Create a VertexBuffer object and pass the vertex data to it
+    VertexBuffer vertexBuffer(triangle.data(), sizeof(float) * triangle.size());
+    
     GLuint squareShaderProgram = CompileShader(vertexShaderSrc, fragmentShaderSrc);
 
     while (!glfwWindowShouldClose(window))
     {
-        // Clear the screen
-        glClear(GL_COLOR_BUFFER_BIT);
 
-        // Draw the triangle
+        //preparation
+        glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(squareShaderProgram);
+
+        //buffer and drawing
+        vertexBuffer.Bind();
         glDrawArrays(GL_TRIANGLES, 0, 3);
+        vertexBuffer.Unbind();
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
-
-        // Poll for and process events
         glfwPollEvents();
     }
+
     return 0;
 }
+

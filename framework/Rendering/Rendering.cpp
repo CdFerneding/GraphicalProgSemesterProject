@@ -2,7 +2,7 @@
 
 int VertexBuffer::triangle_counter = 0;
 
-VertexBuffer::VertexBuffer(const void* vertices, GLsizei size)
+VertexBuffer::VertexBuffer(const void *vertices, GLsizei size)
 {
     // Generate a Vertex Buffer Object (VBO) and bind it
     glGenBuffers(1, &VertexBufferID);
@@ -12,12 +12,14 @@ VertexBuffer::VertexBuffer(const void* vertices, GLsizei size)
     glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     triangle_counter++;
+    // cout << "new number of triangles is: " << triangle_counter << endl;
 }
 
 VertexBuffer::~VertexBuffer()
 {
     glDeleteBuffers(1, &VertexBufferID);
     triangle_counter--;
+    // cout << "new number of triangles is: " << triangle_counter << endl;
 }
 
 void VertexBuffer::Bind() const
@@ -29,7 +31,7 @@ void VertexBuffer::Bind() const
 void VertexBuffer::Unbind() const
 {
     // Unbind any currently bound GL_ARRAY_BUFFER
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
 }
 
 void VertexBuffer::BufferSubData(GLintptr offset, GLsizeiptr size, const void* data) const
