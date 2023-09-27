@@ -4,6 +4,8 @@
 #include "../../framework/Rendering/IndexBuffer.h"
 #include "./../Rendering/Rendering.h"
 
+#include "./../Rendering/Rendering.h"
+
 Lab2Application::Lab2Application(const std::string &name, const std::string &version, 
     unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
 
