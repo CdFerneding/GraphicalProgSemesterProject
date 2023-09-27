@@ -2,9 +2,8 @@
 #include "shader.h"
 #include "./../GeometricTools/GeometricTools.h" 
 
-GLuint CompileShader(const std::string& vertexShaderSrc, const std::string& fragmentShaderSrc);
-
-Lab2Application::Lab2Application(const std::string &name, const std::string &version, unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
+Lab2Application::Lab2Application(const std::string &name, const std::string &version, 
+    unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
 
 }
 
@@ -12,16 +11,9 @@ Lab2Application::~Lab2Application() {
 
 }
 
-    //
-    // Function to implement programmed shaders: virtual function with default behaviour
-    //
-GLuint CompileShader(std::string& vertexShaderSrc,
-    std::string& fragmentShaderSrc);
-
 unsigned Lab2Application::Run() const {
 
     auto triangle = GeometricTools::UnitTriangle2D;
-
 
     // Create a vertex array object (VAO)
     GLuint vertexArrayId;
@@ -40,8 +32,7 @@ unsigned Lab2Application::Run() const {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
     glEnableVertexAttribArray(0);
 
-    auto squareShaderProgram = CompileShader(vertexShaderSrc,
-        fragmentShaderSrc);
+    auto squareShaderProgram = CompileShader(vertexShaderSrc, fragmentShaderSrc);
 
 
     while (!glfwWindowShouldClose(window))
