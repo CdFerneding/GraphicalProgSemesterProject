@@ -22,6 +22,7 @@ public:
 
 private:
     GLuint VertexBufferID;
+    static int triangle_counter;
 };
 
 #endif // VERTEXBUFFER_H_
