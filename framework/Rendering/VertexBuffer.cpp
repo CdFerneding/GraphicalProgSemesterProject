@@ -4,10 +4,8 @@ int VertexBuffer::count = 0;
 
 VertexBuffer::VertexBuffer(const void *vertices, GLsizei size)
 {
-
     glGenBuffers(1, &VertexBufferID);
     Bind();
-
     // transfer data to GPU
     glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
     count++;
@@ -16,6 +14,7 @@ VertexBuffer::VertexBuffer(const void *vertices, GLsizei size)
 VertexBuffer::~VertexBuffer()
 {
     glDeleteBuffers(count, &VertexBufferID);
+    count--;
     // cout << "new number of triangles is: " << triangle_counter << endl;
 }
 
