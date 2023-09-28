@@ -1,22 +1,27 @@
 #include "VertexBuffer.h"
 
-int VertexBuffer::triangle_counter = 0;
+int VertexBuffer::count = 0;
 
 VertexBuffer::VertexBuffer(const void *vertices, GLsizei size)
 {
+
     glGenBuffers(1, &VertexBufferID);
+    Bind();
+
+    // transfer data to GPU
     glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
-    triangle_counter++;
+    count++;
 }
 
 VertexBuffer::~VertexBuffer()
 {
-    glDeleteBuffers(triangle_counter, &VertexBufferID);
+    glDeleteBuffers(count, &VertexBufferID);
     // cout << "new number of triangles is: " << triangle_counter << endl;
 }
 
 void VertexBuffer::Bind() const
 {
+    // make the vertex buffer active
     glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
 }
 
@@ -28,5 +33,8 @@ void VertexBuffer::Unbind() const
 void VertexBuffer::BufferSubData(GLintptr offset, GLsizeiptr size, const void* data) const
 {
     // Update a specific segment of the buffer with new data
+    // replacement starts at "offset"-bytes into the array
+    // replacement goes "size"-bytes far
+    // this part will be replaced by data
     glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
 }

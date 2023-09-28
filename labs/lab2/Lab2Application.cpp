@@ -65,7 +65,6 @@ unsigned Lab2Application::Run() const {
     // vertex buffer module
     //
     VertexBuffer vertexbuffer(triangle.data(), sizeof(float) * triangle.size());
-    vertexbuffer.Bind();
 
 
     //
@@ -75,11 +74,14 @@ unsigned Lab2Application::Run() const {
     IndexBuffer indexBuffer(indices, 2);
     indexBuffer.Bind();
 
- 
+    // Create a vertex array object (VAO)
+    GLuint vertexArrayId;
+    glGenVertexArrays(1, &vertexArrayId);
+    glBindVertexArray(vertexArrayId);
+
     // Define the vertex attribute layout of the bound buffer
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
     
 
     GLuint squareShaderProgram = CompileShader(vertexShaderSrc, fragmentShaderSrc);
