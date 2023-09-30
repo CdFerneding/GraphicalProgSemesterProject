@@ -20,7 +20,12 @@ find_package(OpenGL REQUIRED)
 add_library(Rendering VertexBuffer.cpp
         ShaderDataTypes.h
         IndexBuffer.cpp
-        IndexBuffer.h)
+        IndexBuffer.h
+        BufferLayout.cpp
+        BufferLayout.h
+        BufferAttribute.h
+        VertextArray.cpp
+        VertextArray.h)
 
 add_library(Framework::Rendering ALIAS Rendering)
 
