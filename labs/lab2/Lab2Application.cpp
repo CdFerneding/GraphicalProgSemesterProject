@@ -59,18 +59,12 @@ GLuint CompileShader(const std::string& vertexShaderSrc,
 }
 
 unsigned Lab2Application::Run() const {
-    auto triangle = GeometricTools::UnitTriangle2D;
-
-    float triangle2[] = {
-        0.5f, 0.5f,
-        -0.5f, 0.5f,
-        -0.5f, -0.5f
-    };
+    auto triangle = GeometricTools::UnitSquare2D;
 
     //
     // vertex buffer module
     //
-    VertexBuffer vertexbuffer(&triangle2, sizeof(float) * triangle.size());
+    VertexBuffer vertexbuffer(&triangle, sizeof(float) * triangle.size());
 
 
     // Create a vertex array object (VAO)
@@ -81,9 +75,12 @@ unsigned Lab2Application::Run() const {
     //
     // index module
     //
-    //GLuint * indices = new GLuint();
-    //IndexBuffer indexBuffer(indices, 2);
-    //indexBuffer.Bind();
+    GLuint indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+    IndexBuffer indexBuffer(indices, 6);
+    indexBuffer.Bind();
 
 
     // Define the vertex attribute layout of the bound buffer
@@ -99,9 +96,15 @@ unsigned Lab2Application::Run() const {
         //preparation
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(squareShaderProgram);
+        glDrawElements(
+                GL_TRIANGLES,      // mode
+                6,    // count
+                GL_UNSIGNED_INT,   // type
+                (void*)0           // element array buffer offset
+        );
 
         //buffer and drawing
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
