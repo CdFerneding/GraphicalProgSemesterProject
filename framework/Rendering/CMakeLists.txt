@@ -25,7 +25,7 @@ add_library(Rendering VertexBuffer.cpp
         BufferLayout.h
         BufferAttribute.h
         VertextArray.cpp
-        VertextArray.h)
+        VertextArray.h "Shader.h" "Shader.cpp")
 
 add_library(Framework::Rendering ALIAS Rendering)
 
@@ -38,4 +38,4 @@ add_library(Framework::Rendering ALIAS Rendering)
 #               provided by the find_package(OpenGL) command.
 
 target_include_directories(Rendering PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(Rendering PUBLIC glfw glad OpenGL::GL)
+target_link_libraries(Rendering PUBLIC glm glfw glad OpenGL::GL)
