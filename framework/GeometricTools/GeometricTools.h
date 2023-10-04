@@ -8,9 +8,32 @@ namespace GeometricTools {
 
     constexpr std::array<float, 3*4> UnitSquare2D = {-0.5f, -0.5f, 0.5f, -0.5f, 0.5f,  0.5f, -0.5f,  0.5f}; // [2,4]
 
-    constexpr std::array<float, 3*4> UnitGridGeometry2D = {-0.5f, -0.5f, 0.5f, -0.5f, 0.5f,  0.5f, -0.5f,  0.5f}; // [2,4]
+    float * UnitGrid2D(const unsigned int divisions) {
+        auto grid = new float[3*(divisions+1)*(divisions+1)];
+        for (unsigned int i = 0; i <= divisions; i++) {
+            for (unsigned int j = 0; j <= divisions; j++) {
+                grid[3*(i*(divisions+1)+j)] = -0.5f + (float)j/divisions;
+                grid[3*(i*(divisions+1)+j)+1] = -0.5f + (float)i/divisions;
+                grid[3*(i*(divisions+1)+j)+2] = 0.0f;
+            }
+        }
+        return grid;
+    };
 
-    constexpr std::array<unsigned int, 3*2> UnitGridTopologyTriangles = {0, 1, 2, 0, 2, 3}; // [2,3]
+    unsigned int * UnitGrid2DTopology(const unsigned int divisions) {
+        auto * topology = new unsigned int[3*2*divisions*divisions];
+        for (unsigned int i = 0; i < divisions; i++) {
+            for (unsigned int j = 0; j < divisions; j++) {
+                topology[6*(i*divisions+j)] = i*(divisions+1)+j;
+                topology[6*(i*divisions+j)+1] = i*(divisions+1)+j+1;
+                topology[6*(i*divisions+j)+2] = (i+1)*(divisions+1)+j+1;
+                topology[6*(i*divisions+j)+3] = i*(divisions+1)+j;
+                topology[6*(i*divisions+j)+4] = (i+1)*(divisions+1)+j+1;
+                topology[6*(i*divisions+j)+5] = (i+1)*(divisions+1)+j;
+            }
+        }
+        return topology;
+    };
 
 }
 

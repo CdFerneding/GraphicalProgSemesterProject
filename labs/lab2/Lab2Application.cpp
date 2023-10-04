@@ -60,24 +60,16 @@ GLuint CompileShader(const std::string& vertexShaderSrc,
 }
 
 unsigned Lab2Application::Run() const {
-    auto triangle = GeometricTools::UnitSquare2D;
+    unsigned numberOfSquare = 8;
+    auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
 
-    //
-    // vertex buffer module
-    //
-    //VertexBuffer vertexbuffer(&triangle, sizeof(float) * triangle.size());
-    //vertexbuffer.Bind();
-    // Create a vertex array object (VAO)
-    GLuint vertexArrayId;
     auto vertexArray = std::make_shared<VertexArray>();
-    GLuint indices[] = {
-            0, 1, 2,
-            2, 3, 0
-    };
+    auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
     //Create the indexBuffer with shared_ptr
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices, 6);
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices, numberOfSquare * numberOfSquare * 6);
     auto gridBufferLayout = BufferLayout({{ShaderDataType::Float2, "position"}});
-    auto vertexBuffer = std::make_shared<VertexBuffer>(&triangle, sizeof(float) * triangle.size());
+    auto vertexBuffer = std::make_shared<VertexBuffer>(&triangle, sizeof(float) * numberOfSquare * numberOfSquare * 3);
+
 
     vertexBuffer->SetLayout(gridBufferLayout);
     vertexArray->AddVertexBuffer(vertexBuffer);
@@ -95,6 +87,7 @@ unsigned Lab2Application::Run() const {
     //indexBuffer.Bind();
 
     // Define the vertex attribute layout of the bound buffer
+
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
     glEnableVertexAttribArray(0);
     
@@ -111,7 +104,7 @@ unsigned Lab2Application::Run() const {
         glUseProgram(squareShaderProgram);
         glDrawElements(
                 GL_TRIANGLES,      // mode
-                6,    // count
+                numberOfSquare*numberOfSquare * 6,    // count
                 GL_UNSIGNED_INT,   // type
                 (void*)0           // element array buffer offset
         );
