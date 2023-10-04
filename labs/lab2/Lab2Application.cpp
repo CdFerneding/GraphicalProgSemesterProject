@@ -3,6 +3,7 @@
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
 #include "./../Rendering/VertexBuffer.h"
+#include "VertextArray.h"
 
 Lab2Application::Lab2Application(const std::string &name, const std::string &version, 
     unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
@@ -64,24 +65,34 @@ unsigned Lab2Application::Run() const {
     //
     // vertex buffer module
     //
-    VertexBuffer vertexbuffer(&triangle, sizeof(float) * triangle.size());
-
-
+    //VertexBuffer vertexbuffer(&triangle, sizeof(float) * triangle.size());
+    //vertexbuffer.Bind();
     // Create a vertex array object (VAO)
-    GLuint vertexArrayId; 
-    glGenVertexArrays(1, &vertexArrayId); 
-    glBindVertexArray(vertexArrayId); 
+    GLuint vertexArrayId;
+    auto vertexArray = std::make_shared<VertexArray>();
+    GLuint indices[] = {
+            0, 1, 2,
+            2, 3, 0
+    };
+    //Create the indexBuffer with shared_ptr
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices, 6);
+    auto gridBufferLayout = BufferLayout({{ShaderDataType::Float2, "position"}});
+    auto vertexBuffer = std::make_shared<VertexBuffer>(&triangle, sizeof(float) * triangle.size());
+
+    vertexBuffer->SetLayout(gridBufferLayout);
+    vertexArray->AddVertexBuffer(vertexBuffer);
+    vertexArray->SetIndexBuffer(indexBuffer);
+
+    vertexArray->Bind();
+
+    //glGenVertexArrays(1, &vertexArrayId);
+    //glBindVertexArray(vertexArrayId);
 
     //
     // index module
     //
-    GLuint indices[] = {
-        0, 1, 2,
-        2, 3, 0
-    };
-    IndexBuffer indexBuffer(indices, 6);
-    indexBuffer.Bind();
-
+    //IndexBuffer indexBuffer(indices, 6);
+    //indexBuffer.Bind();
 
     // Define the vertex attribute layout of the bound buffer
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
@@ -95,6 +106,8 @@ unsigned Lab2Application::Run() const {
 
         //preparation
         glClear(GL_COLOR_BUFFER_BIT);
+
+
         glUseProgram(squareShaderProgram);
         glDrawElements(
                 GL_TRIANGLES,      // mode
@@ -111,8 +124,8 @@ unsigned Lab2Application::Run() const {
         glfwPollEvents();
     }
 
-    vertexbuffer.Unbind();
-    vertexbuffer.~VertexBuffer();
+    vertexArray->Unbind();
+    vertexArray->~VertexArray();
 
     return 0;
 }
