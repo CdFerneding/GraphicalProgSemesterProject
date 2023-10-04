@@ -87,8 +87,6 @@ unsigned Lab2Application::Run() const {
     // Cleanup of Shader and Buffers
     shader.Unbind();
     shader.~Shader();
-    vertexbuffer.Unbind();
-    vertexbuffer.~VertexBuffer();
     vertexArray->Unbind();
     vertexArray->~VertexArray();
 
