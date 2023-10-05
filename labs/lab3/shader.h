@@ -5,10 +5,12 @@
 // Vertex and fragment shader source code
 const std::string vertexShaderSrc = R"(
         #version 430 core
-        layout(location = 0) in vec2 position;
-        void main()
-        {
-            gl_Position = vec4(position, 0.0, 1.0);
+        layout(location = 0) in vec4 a_Position;
+        uniform mat4 u_Model;
+        uniform mat4 u_View;
+        uniform mat4 u_Projection;
+        void main(){
+            gl_Position = u_Projection* u_View * u_Model * position;
         }
     )";
 

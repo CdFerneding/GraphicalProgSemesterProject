@@ -61,20 +61,41 @@ unsigned Lab2Application::Run() const {
 
 
     //
-    // Shader module
-    //
-    Shader shader(vertexShaderSrc, fragmentShaderSrc);
-
-    //
     // camera
     //
     // perspective on how to observe the world: field of view: 45 degrees, aspect ration of 1, near and far plane of 1 and -10
-    glm::mat4 perspective = glm::perspective(45.0f, 1.0f, 1.0f, -10.0f);
+    glm::mat4 projectionMatrix = glm::perspective(45.0f, 1.0f, 1.0f, -10.0f);
 
     // view transformation Matrix: position and orientation of the matrix
-    auto view = glm::translate(
+    // --> position of the camera ("eye", Position where the camera is looking at, Normalized up vektor
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0,0,0), glm::vec3(0,1,0)); 
+    
+    // model transformation: scale, rotate, translate (model = scale*rotate*translate)
+    // scale: scale matrix, scaling of each axis
+    glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
 
-    )
+    // rotate: rotation matrix, rotation angle in radians, rotation axis
+    glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), 45.0f, glm::vec3(0.0f, 0.0f, 1.0f ));
+
+    //translate: 
+    glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(10.0f, 0.0f, 0.0f));
+
+    auto chessboardModelMatrix = translate * rotate * scale; 
+
+    // extend shader to support 4x4 matrices as uniforms
+    // Get the location of our uniforms in the shader
+    auto u_Projection = glGetUniformLocation(vertexShaderSrc, "u_Projection");
+    auto u_View = glGetUniformLocation(vertexShaderSrc, "u_View");
+    auto u_Model = glGetUniformLocation(vertexShaderSrc, "u_Model");
+    
+    glUniformMatrix4fv(u_Projection, 1, GL_FALSE, projectionMatrix);
+    glUniformMatrix4fv(u_View, 1, GL_FALSE, viewMatrix);
+    glUniformMatrix4fv(u_Model, 1, GL_FALSE, chessboardModelMatrix);
+
+    //
+    // Shader module
+    //
+    Shader shader(vertexShaderSrc, fragmentShaderSrc);
 
 
     while (!glfwWindowShouldClose(window))
