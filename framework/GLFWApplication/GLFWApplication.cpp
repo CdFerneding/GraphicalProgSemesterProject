@@ -20,7 +20,7 @@ unsigned int GLFWApplication::Init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     // Create a GLFW window
-    window = glfwCreateWindow(800, 600, "Triangle", nullptr, nullptr);
+    window = glfwCreateWindow(800, 800, "Triangle", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();

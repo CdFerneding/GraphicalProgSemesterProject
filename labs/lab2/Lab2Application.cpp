@@ -66,9 +66,9 @@ unsigned Lab2Application::Run() const {
     auto vertexArray = std::make_shared<VertexArray>();
     auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
     //Create the indexBuffer with shared_ptr
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices, numberOfSquare * numberOfSquare * 6);
-    auto gridBufferLayout = BufferLayout({{ShaderDataType::Float2, "position"}});
-    auto vertexBuffer = std::make_shared<VertexBuffer>(&triangle, sizeof(float) * numberOfSquare * numberOfSquare * 3);
+    auto vertexBuffer = std::make_shared<VertexBuffer>(triangle, sizeof(float)*(numberOfSquare+1)*(numberOfSquare+1)*3);
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices, numberOfSquare * numberOfSquare * 2 * 3);
+    auto gridBufferLayout = BufferLayout({{ShaderDataType::Float3, "position"}});
 
 
     vertexBuffer->SetLayout(gridBufferLayout);
@@ -88,7 +88,7 @@ unsigned Lab2Application::Run() const {
 
     // Define the vertex attribute layout of the bound buffer
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
     glEnableVertexAttribArray(0);
     
 
@@ -104,7 +104,7 @@ unsigned Lab2Application::Run() const {
         glUseProgram(squareShaderProgram);
         glDrawElements(
                 GL_TRIANGLES,      // mode
-                numberOfSquare*numberOfSquare * 6,    // count
+                numberOfSquare * numberOfSquare * 2 * 3,    // count
                 GL_UNSIGNED_INT,   // type
                 (void*)0           // element array buffer offset
         );
