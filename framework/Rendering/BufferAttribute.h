@@ -10,6 +10,8 @@ struct BufferAttribute {
             : Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offset(0),
               Normalized(normalized) {}
 
+    ~BufferAttribute() = default;
+
     std::string Name;
     ShaderDataType Type;
     GLuint Size;

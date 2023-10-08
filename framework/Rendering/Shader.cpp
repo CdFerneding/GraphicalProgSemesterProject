@@ -26,14 +26,13 @@ Shader::Shader(const std::string& vertexSrc, const std::string& fragmentSrc)
         glGetProgramInfoLog(ShaderProgram, 512, NULL, infoLog);
         std::cerr << "Shader program linking failed: " << infoLog << std::endl;
     }
-
+    glDeleteShader(VertexShader);
+    glDeleteShader(FragmentShader);
 }
 
 
 Shader::~Shader()
 {
-    glDeleteShader(VertexShader);
-    glDeleteShader(FragmentShader);
     glDeleteProgram(ShaderProgram);
 }
 

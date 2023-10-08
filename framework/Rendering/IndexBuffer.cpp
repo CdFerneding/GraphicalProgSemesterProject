@@ -8,6 +8,7 @@ IndexBuffer::IndexBuffer(GLuint *indices, GLsizei count) : Count(count) {
 }
 
 IndexBuffer::~IndexBuffer() {
+
     glDeleteBuffers(1, &IndexBufferID);
 }
 

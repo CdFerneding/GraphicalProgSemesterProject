@@ -6,9 +6,9 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer> &vertexBuf
 
 void VertexArray::Bind() const {
     glBindVertexArray(m_vertexArrayID);
-    /*for (auto &vertexBuffer : VertexBuffers) {
+    for (auto &vertexBuffer : VertexBuffers) {
         vertexBuffer->Bind();
-    }*/
+    }
     IdxBuffer->Bind();
 }
 
