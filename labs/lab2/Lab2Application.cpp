@@ -1,5 +1,5 @@
 #include "Lab2Application.h"
-#include "shader.h"
+#include "shader_lab2.h"
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
 #include "./../Rendering/VertexBuffer.h"
@@ -16,25 +16,16 @@ Lab2Application::~Lab2Application() {
 }
 
 
-unsigned Lab2Application::Run() const {
-    auto triangle = GeometricTools::UnitSquare2D;
+unsigned Lab2Application::Run() {
+    unsigned numberOfSquare = 8;
+    auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
 
-    //
-    // vertex buffer module
-    //
-    //VertexBuffer vertexbuffer(&triangle, sizeof(float) * triangle.size());
-    //vertexbuffer.Bind();
-    // Create a vertex array object (VAO)
-    GLuint vertexArrayId;
     auto vertexArray = std::make_shared<VertexArray>();
-    GLuint indices[] = {
-            0, 1, 2,
-            2, 3, 0
-    };
-    //Create the indexBuffer with shared_ptr
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices, 6);
-    auto gridBufferLayout = BufferLayout({{ShaderDataType::Float2, "position"}});
-    auto vertexBuffer = std::make_shared<VertexBuffer>(&triangle, sizeof(float) * triangle.size());
+    auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
+
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
+    auto gridBufferLayout = BufferLayout({{ShaderDataType::Float3, "position"}});
+    auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
 
     vertexBuffer->SetLayout(gridBufferLayout);
     vertexArray->AddVertexBuffer(vertexBuffer);
@@ -53,7 +44,8 @@ unsigned Lab2Application::Run() const {
     //indexBuffer.Bind();
 
     // Define the vertex attribute layout of the bound buffer
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
     glEnableVertexAttribArray(0);
 
 
@@ -70,10 +62,10 @@ unsigned Lab2Application::Run() const {
         glClear(GL_COLOR_BUFFER_BIT);
         shader.Bind();
         glDrawElements(
-                GL_TRIANGLES,       // mode
-                6,                  // count
-                GL_UNSIGNED_INT,    // type
-                (void*)0            // element array buffer offset
+                GL_TRIANGLES,      // mode
+                indices.size(),    // count
+                GL_UNSIGNED_INT,   // type
+                (void*)0           // element array buffer offset
         );
 
         //buffer and drawing
@@ -88,8 +80,19 @@ unsigned Lab2Application::Run() const {
     shader.Unbind();
     shader.~Shader();
     vertexArray->Unbind();
-    vertexArray->~VertexArray();
+    //vertexArray->~VertexArray();
+    unsigned int stop_error_code = stop();
+    if (stop_error_code != EXIT_SUCCESS) {
+        //print error message
+        std::cerr << "Error stopping GLFW application" << std::endl;
+        std::cerr << "Error code: " << stop_error_code << std::endl;
+        //print opengl message
+        std::cerr << "OpenGL Error: " << glGetError() << std::endl;
+    }
 
-    return 0;
+    return stop_error_code;
 }
 
+unsigned Lab2Application::stop() {
+    return GLFWApplication::stop();
+}

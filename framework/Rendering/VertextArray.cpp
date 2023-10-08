@@ -6,10 +6,10 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer> &vertexBuf
 
 void VertexArray::Bind() const {
     glBindVertexArray(m_vertexArrayID);
-    IdxBuffer->Bind();
-    for (auto &vertexBuffer : VertexBuffers) {
+    /*for (auto &vertexBuffer : VertexBuffers) {
         vertexBuffer->Bind();
-    }
+    }*/
+    IdxBuffer->Bind();
 }
 
 VertexArray::VertexArray() {
@@ -17,12 +17,16 @@ VertexArray::VertexArray() {
 }
 
 VertexArray::~VertexArray() {
-    glDeleteVertexArrays(1, &m_vertexArrayID);
+    IdxBuffer->~IndexBuffer();
+    for (auto &vertexBuffer : VertexBuffers) {
+        vertexBuffer->~VertexBuffer();
+    }
 }
 
 void VertexArray::Unbind() const {
     glBindVertexArray(0);
     IdxBuffer->Unbind();
+
     for (auto &vertexBuffer : VertexBuffers) {
         vertexBuffer->Unbind();
     }

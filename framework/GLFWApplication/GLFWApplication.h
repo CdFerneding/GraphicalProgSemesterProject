@@ -23,7 +23,7 @@ public:
     // 
     // Run function that is implemented individually
     //
-    virtual unsigned Run() const = 0; // Pure virtual function that must be redefined.
+    virtual unsigned Run() = 0; // Pure virtual function that must be redefined.
 
 
     // 

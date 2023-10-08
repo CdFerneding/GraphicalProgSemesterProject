@@ -13,7 +13,7 @@ VertexBuffer::VertexBuffer(const void *vertices, GLsizei size)
 
 VertexBuffer::~VertexBuffer()
 {
-    glDeleteBuffers(count, &VertexBufferID);
+    glDeleteBuffers(1, &VertexBufferID);
     count--;
     // cout << "new number of triangles is: " << triangle_counter << endl;
 }
