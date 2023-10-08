@@ -59,17 +59,16 @@ GLuint CompileShader(const std::string& vertexShaderSrc,
     return shaderProgram;
 }
 
-unsigned Lab2Application::Run() const {
+unsigned Lab2Application::Run() {
     unsigned numberOfSquare = 8;
     auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
 
     auto vertexArray = std::make_shared<VertexArray>();
     auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
-    //Create the indexBuffer with shared_ptr
-    auto vertexBuffer = std::make_shared<VertexBuffer>(triangle, sizeof(float)*(numberOfSquare+1)*(numberOfSquare+1)*3);
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices, numberOfSquare * numberOfSquare * 2 * 3);
-    auto gridBufferLayout = BufferLayout({{ShaderDataType::Float3, "position"}});
 
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
+    auto gridBufferLayout = BufferLayout({{ShaderDataType::Float3, "position"}});
+    auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
 
     vertexBuffer->SetLayout(gridBufferLayout);
     vertexArray->AddVertexBuffer(vertexBuffer);
@@ -104,7 +103,7 @@ unsigned Lab2Application::Run() const {
         glUseProgram(squareShaderProgram);
         glDrawElements(
                 GL_TRIANGLES,      // mode
-                numberOfSquare * numberOfSquare * 2 * 3,    // count
+                indices.size(),    // count
                 GL_UNSIGNED_INT,   // type
                 (void*)0           // element array buffer offset
         );
@@ -118,8 +117,19 @@ unsigned Lab2Application::Run() const {
     }
 
     vertexArray->Unbind();
-    vertexArray->~VertexArray();
+    //vertexArray->~VertexArray();
+    unsigned int stop_error_code = stop();
+    if (stop_error_code != EXIT_SUCCESS) {
+        //print error message
+        std::cerr << "Error stopping GLFW application" << std::endl;
+        std::cerr << "Error code: " << stop_error_code << std::endl;
+        //print opengl message
+        std::cerr << "OpenGL Error: " << glGetError() << std::endl;
+    }
 
-    return 0;
+    return stop_error_code;
 }
 
+unsigned Lab2Application::stop() {
+    return GLFWApplication::stop();
+}

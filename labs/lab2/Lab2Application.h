@@ -9,7 +9,8 @@ class Lab2Application : public GLFWApplication{
         explicit Lab2Application(const std::string &name = "Lab2", const std::string &version = "0.0.1", 
             unsigned int width = 800, unsigned int height = 600);
         ~Lab2Application();
-        unsigned Run() const;
+        unsigned Run();
+        unsigned stop();
 };
 
 

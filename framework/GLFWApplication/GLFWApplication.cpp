@@ -40,8 +40,8 @@ unsigned int GLFWApplication::Init() {
 }
 
 unsigned int GLFWApplication::stop() {
-    glfwTerminate();
     glfwDestroyWindow(window);
+    glfwTerminate();
 
     return EXIT_SUCCESS;
 }

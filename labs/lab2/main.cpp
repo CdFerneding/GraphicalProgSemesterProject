@@ -9,5 +9,5 @@ int main(int argc, char *argv[])
 
     application.Run();
 
-    application.stop();
+    return application.stop();
 }
