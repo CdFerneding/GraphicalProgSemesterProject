@@ -1,5 +1,5 @@
 #include "Lab2Application.h"
-#include "shader.h"
+#include "../../labs/lab3/shader.h"
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
 #include "./../Rendering/VertexBuffer.h"
@@ -61,6 +61,12 @@ unsigned Lab2Application::Run() const {
 
 
     //
+    // Shader module
+    //
+    Shader shader(vertexShaderSrc, fragmentShaderSrc);
+
+
+    //
     // camera
     //
     // perspective on how to observe the world: field of view: 45 degrees, aspect ration of 1, near and far plane of 1 and -10
@@ -84,19 +90,13 @@ unsigned Lab2Application::Run() const {
 
     // extend shader to support 4x4 matrices as uniforms
     // Get the location of our uniforms in the shader
-    auto u_Projection = glGetUniformLocation(vertexShaderSrc, "u_Projection");
-    auto u_View = glGetUniformLocation(vertexShaderSrc, "u_View");
-    auto u_Model = glGetUniformLocation(vertexShaderSrc, "u_Model");
-    
-    glUniformMatrix4fv(u_Projection, 1, GL_FALSE, projectionMatrix);
-    glUniformMatrix4fv(u_View, 1, GL_FALSE, viewMatrix);
-    glUniformMatrix4fv(u_Model, 1, GL_FALSE, chessboardModelMatrix);
+    auto u_Projection = glGetUniformLocation(shader.ShaderProgram, "u_Projection");
+    auto u_View = glGetUniformLocation(shader.ShaderProgram, "u_View");
+    auto u_Model = glGetUniformLocation(shader.ShaderProgram, "u_Model");
 
-    //
-    // Shader module
-    //
-    Shader shader(vertexShaderSrc, fragmentShaderSrc);
-
+    glUniformMatrix4fv(u_Projection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    glUniformMatrix4fv(u_View, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(chessboardModelMatrix));
 
     while (!glfwWindowShouldClose(window))
     {

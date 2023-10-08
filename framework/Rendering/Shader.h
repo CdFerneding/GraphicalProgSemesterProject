@@ -15,6 +15,8 @@ public:
 private:
 	GLuint VertexShader;
 	GLuint FragmentShader;
+
+public:
 	GLuint ShaderProgram;
 
 	void CompileShader(GLenum shaderType, const std::string& shaderSrc);

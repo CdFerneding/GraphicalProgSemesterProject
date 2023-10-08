@@ -46,9 +46,6 @@ int draw_triangle()
         return EXIT_FAILURE;
     }
 
-    // printing currently used openGL version
-    std::cout << glGetString(GL_VERSION) << std::endl;
-
     // 3 vertexes and 6 vertices
     auto triangle = GeometricTools::UnitTriangle2D; 
 
