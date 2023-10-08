@@ -19,6 +19,6 @@ private:
 public:
 	GLuint ShaderProgram;
 
-	void CompileShader(GLenum shaderType, const std::string& shaderSrc);
+	GLuint CompileShader(GLenum shaderType, const char * shaderSrc);
 };
 

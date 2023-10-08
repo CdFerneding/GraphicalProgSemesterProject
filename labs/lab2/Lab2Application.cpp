@@ -1,5 +1,5 @@
 #include "Lab2Application.h"
-#include "shader.h"
+#include "shader_lab2.h"
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
 #include "./../Rendering/VertexBuffer.h"
