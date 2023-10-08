@@ -1,4 +1,4 @@
-#include "Lab2Application.h"
+#include "Lab3Application.h"
 #include "../../labs/lab3/shader.h"
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
@@ -9,17 +9,17 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-Lab2Application::Lab2Application(const std::string &name, const std::string &version, 
-    unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
+Lab3Application::Lab3Application(const std::string &name, const std::string &version,
+                                 unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
 
 }
 
-Lab2Application::~Lab2Application() {
+Lab3Application::~Lab3Application() {
 
 }
 
 
-unsigned Lab2Application::Run() const {
+unsigned Lab3Application::Run() {
     auto triangle = GeometricTools::UnitSquare2D;
 
     //

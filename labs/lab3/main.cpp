@@ -1,9 +1,9 @@
 
-#include "Lab2Application.h"
+#include "Lab3Application.h"
 
 int main(int argc, char *argv[])
 {
-    Lab2Application application("Lab1_withFramework", "1.0");
+    Lab3Application application("Lab1_withFramework", "1.0");
 
     application.Init();
 

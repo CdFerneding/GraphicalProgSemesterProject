@@ -10,7 +10,7 @@ project(lab3)
 # Add an executable target named 'tuto_lab1_glfw' that is built from the source
 # file 'main.cpp'. This means that CMake will generate build rules to compile
 # 'main.cpp' and link it into an executable program named 'tuto_lab1_glfw'.
-add_executable(lab3 main.cpp Lab2Application.h Lab2Application.cpp shader.h)
+add_executable(lab3 main.cpp Lab3Application.h Lab3Application.cpp shader.h)
 
 # Specify libraries to link with the 'tuto_lab1_glfw' target.
 # This tells CMake that when it's linking 'tuto_lab1_glfw', it should also

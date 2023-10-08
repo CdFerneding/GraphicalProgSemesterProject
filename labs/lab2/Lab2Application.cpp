@@ -6,8 +6,8 @@
 #include "VertextArray.h"
 #include "../../framework/Rendering/Shader.h"
 
-Lab2Application::Lab2Application(const std::string &name, const std::string &version, 
-    unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
+Lab2Application::Lab2Application(const std::string &name, const std::string &version,
+                                 unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
 
 }
 
