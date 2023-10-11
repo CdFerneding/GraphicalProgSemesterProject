@@ -1,5 +1,5 @@
 #include "Lab3Application.h"
-#include "../../labs/lab3/shader.h"
+#include "shader.h"
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
 #include "./../Rendering/VertexBuffer.h"
@@ -8,6 +8,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+//#include "../../framework/ErrorHandling/ErrorHandling.h"
 
 Lab3Application::Lab3Application(const std::string &name, const std::string &version,
                                  unsigned int width, unsigned int height): GLFWApplication(name, version, width, height) {
@@ -20,24 +22,15 @@ Lab3Application::~Lab3Application() {
 
 
 unsigned Lab3Application::Run() {
-    auto triangle = GeometricTools::UnitSquare2D;
+    unsigned numberOfSquare = 8;
+    auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
 
-    //
-    // vertex buffer module
-    //
-    //VertexBuffer vertexbuffer(&triangle, sizeof(float) * triangle.size());
-    //vertexbuffer.Bind();
-    // Create a vertex array object (VAO)
-    GLuint vertexArrayId;
     auto vertexArray = std::make_shared<VertexArray>();
-    GLuint indices[] = {
-            0, 1, 2,
-            2, 3, 0
-    };
-    //Create the indexBuffer with shared_ptr
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices, 6);
-    auto gridBufferLayout = BufferLayout({{ShaderDataType::Float2, "position"}});
-    auto vertexBuffer = std::make_shared<VertexBuffer>(&triangle, sizeof(float) * triangle.size());
+    auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
+
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
+    auto gridBufferLayout = BufferLayout({ {ShaderDataType::Float3, "position"} });
+    auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
 
     vertexBuffer->SetLayout(gridBufferLayout);
     vertexArray->AddVertexBuffer(vertexBuffer);
@@ -56,7 +49,8 @@ unsigned Lab3Application::Run() {
     //indexBuffer.Bind();
 
     // Define the vertex attribute layout of the bound buffer
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
     glEnableVertexAttribArray(0);
 
 
@@ -73,42 +67,42 @@ unsigned Lab3Application::Run() {
     glm::mat4 projectionMatrix = glm::perspective(45.0f, 1.0f, 1.0f, -10.0f);
 
     // view transformation Matrix: position and orientation of the matrix
-    // --> position of the camera ("eye", Position where the camera is looking at, Normalized up vektor
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0,0,0), glm::vec3(0,1,0)); 
-    
+    // --> position of the camera ("eye"/position of the camera, Position where the camera is looking at, Normalized up vektor)
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
     // model transformation: scale, rotate, translate (model = scale*rotate*translate)
     // scale: scale matrix, scaling of each axis
     glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
 
     // rotate: rotation matrix, rotation angle in radians, rotation axis
-    glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), 45.0f, glm::vec3(0.0f, 0.0f, 1.0f ));
+    glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), 45.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
     //translate: 
     glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(10.0f, 0.0f, 0.0f));
 
-    auto chessboardModelMatrix = translate * rotate * scale; 
+    auto chessboardModelMatrix = translate * rotate * scale;
 
-    // extend shader to support 4x4 matrices as uniforms
     // Get the location of our uniforms in the shader
-    auto u_Projection = glGetUniformLocation(shader.ShaderProgram, "u_Projection");
-    auto u_View = glGetUniformLocation(shader.ShaderProgram, "u_View");
     auto u_Model = glGetUniformLocation(shader.ShaderProgram, "u_Model");
+    auto u_View = glGetUniformLocation(shader.ShaderProgram, "u_View"); 
+    auto u_Projection = glGetUniformLocation(shader.ShaderProgram, "u_Projection");
 
-    glUniformMatrix4fv(u_Projection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-    glUniformMatrix4fv(u_View, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    // Set uniform matrix values
     glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(chessboardModelMatrix));
+    glUniformMatrix4fv(u_View, 1, GL_FALSE, glm::value_ptr(viewMatrix)); 
+    glUniformMatrix4fv(u_Projection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 
     while (!glfwWindowShouldClose(window))
     {
-        
+
         //preparation of Window and Shader
         glClear(GL_COLOR_BUFFER_BIT);
         shader.Bind();
         glDrawElements(
-                GL_TRIANGLES,       // mode
-                6,                  // count
-                GL_UNSIGNED_INT,    // type
-                (void*)0            // element array buffer offset
+            GL_TRIANGLES,      // mode
+            indices.size(),    // count
+            GL_UNSIGNED_INT,   // type
+            (void*)0           // element array buffer offset
         );
 
         //buffer and drawing
@@ -123,8 +117,16 @@ unsigned Lab3Application::Run() {
     shader.Unbind();
     shader.~Shader();
     vertexArray->Unbind();
-    vertexArray->~VertexArray();
+    //vertexArray->~VertexArray();
+    unsigned int stop_error_code = stop();
+    if (stop_error_code != EXIT_SUCCESS) {
+        //print error message
+        std::cerr << "Error stopping GLFW application" << std::endl;
+        std::cerr << "Error code: " << stop_error_code << std::endl;
+        //print opengl message
+        std::cerr << "OpenGL Error: " << glGetError() << std::endl;
+    }
 
-    return 0;
+    return stop_error_code;
 }
 
