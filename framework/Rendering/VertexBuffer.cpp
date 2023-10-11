@@ -1,3 +1,4 @@
+#include <iostream>
 #include "VertexBuffer.h"
 
 int VertexBuffer::count = 0;
@@ -20,6 +21,24 @@ VertexBuffer::~VertexBuffer()
 
 void VertexBuffer::Bind() const
 {
+    //Iterate over Layout.begin()
+    unsigned countBufferLayout = 0;
+    for (auto i = Layout.begin(); i != Layout.end(); ++i) {
+        // get the attribute
+        auto attribute = *i;
+        glVertexAttribPointer(countBufferLayout, ShaderDataTypeComponentCount(attribute.Type),
+                              ShaderDataTypeToOpenGLBaseType(attribute.Type), attribute.Normalized,
+                              (int) attribute.Size, nullptr);
+
+        /*std::cout << "glVertextAttribPointer(" << countBufferLayout << ", " << ShaderDataTypeComponentCount(attribute.Type)
+                    << ", " << ShaderDataTypeToOpenGLBaseType(attribute.Type) << ", " << attribute.Normalized << ", "
+                    << attribute.Size << ", nullptr)" << std::endl;*/
+
+        glEnableVertexAttribArray(countBufferLayout);
+        //std::cout << "glEnableVertexAttribArray(" << countBufferLayout << ")" << std::endl;
+        countBufferLayout++;
+    }
+
     // make the vertex buffer active
     glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
 }

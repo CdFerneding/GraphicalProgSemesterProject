@@ -50,7 +50,7 @@ namespace GeometricTools {
                 indices.push_back(topRight);
                 indices.push_back(bottomRight);
                 indices.push_back(bottomLeft);
-                std::cout << topLeft << " " << topRight << " " << bottomLeft << " " << topRight << " " << bottomRight << " " << bottomLeft << std::endl;
+                //std::cout << topLeft << " " << topRight << " " << bottomLeft << " " << topRight << " " << bottomRight << " " << bottomLeft << std::endl;
             }
         }
 
