@@ -3,16 +3,17 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <iostream>
+#include <glm/gtc/type_ptr.hpp>
 
-Shader::Shader(const std::string& vertexSrc, const std::string& fragmentSrc) 
+Shader::Shader(const std::string& vertexShaderSrc, const std::string& fragmentShaderSrc) 
 {
 
     // Convert shader source code from std::string to raw char pointer.
-    auto vertexRaw = vertexSrc.c_str();
-    auto fragmentRaw = fragmentSrc.c_str();
+    auto vss = vertexShaderSrc.c_str();
+    auto fss = fragmentShaderSrc.c_str();
     // Compile vertex shader, fragment shader
-    VertexShader = CompileShader(GL_VERTEX_SHADER, vertexRaw);
-    FragmentShader =  CompileShader(GL_FRAGMENT_SHADER, fragmentRaw);
+    VertexShader = CompileShader(GL_VERTEX_SHADER, vss);
+    FragmentShader =  CompileShader(GL_FRAGMENT_SHADER, fss);
 
     // Create shader program and attach compiled shaders
     ShaderProgram = glCreateProgram();
@@ -26,8 +27,9 @@ Shader::Shader(const std::string& vertexSrc, const std::string& fragmentSrc)
         glGetProgramInfoLog(ShaderProgram, 512, NULL, infoLog);
         std::cerr << "Shader program linking failed: " << infoLog << std::endl;
     }
-    glDeleteShader(VertexShader);
-    glDeleteShader(FragmentShader);
+    glDeleteShader(VertexShader); 
+    glDeleteShader(FragmentShader); 
+    glUseProgram(ShaderProgram);
 }
 
 
@@ -53,6 +55,11 @@ void Shader::UploadUniformFloat2(const std::string& name, const glm::vec2& vecto
 {
     GLuint location = glGetUniformLocation(ShaderProgram, name.c_str());
     glUniform2f(location, vector.x, vector.y);
+}
+
+void Shader::UploadUniformMatrix4fv(const std::string& name, const glm::mat4& matrix) {
+    GLuint location = glGetUniformLocation(ShaderProgram, name.c_str());
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 

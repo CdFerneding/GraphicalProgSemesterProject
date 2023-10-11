@@ -82,22 +82,16 @@ unsigned Lab3Application::Run() {
 
     auto chessboardModelMatrix = translate * rotate * scale;
 
-    // Get the location of our uniforms in the shader
-    auto u_Model = glGetUniformLocation(shader.ShaderProgram, "u_Model");
-    auto u_View = glGetUniformLocation(shader.ShaderProgram, "u_View"); 
-    auto u_Projection = glGetUniformLocation(shader.ShaderProgram, "u_Projection");
-
-    // Set uniform matrix values
-    glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(chessboardModelMatrix));
-    glUniformMatrix4fv(u_View, 1, GL_FALSE, glm::value_ptr(viewMatrix)); 
-    glUniformMatrix4fv(u_Projection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    shader.UploadUniformMatrix4fv("u_Model", chessboardModelMatrix);
+    shader.UploadUniformMatrix4fv("u_View", viewMatrix);
+    shader.UploadUniformMatrix4fv("u_Projection", projectionMatrix); 
 
     while (!glfwWindowShouldClose(window))
     {
 
         //preparation of Window and Shader
         glClear(GL_COLOR_BUFFER_BIT);
-        shader.Bind();
+        shader->Bind();
         glDrawElements(
             GL_TRIANGLES,      // mode
             indices.size(),    // count
