@@ -103,7 +103,6 @@ unsigned Lab2Application::Run() {
 
     while (!glfwWindowShouldClose(window))
     {
-        
         //preparation of Window and Shader
         glClear(GL_COLOR_BUFFER_BIT);
         shader->Bind();
