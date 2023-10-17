@@ -29,7 +29,10 @@ unsigned Lab3Application::Run() {
     auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
 
     auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
-    auto gridBufferLayout = BufferLayout({ {ShaderDataType::Float3, "position"} });
+    auto gridBufferLayout = BufferLayout({
+        { ShaderDataType::Float3, "position" },
+        { ShaderDataType::Float4, "color" }
+    });
     auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
 
     vertexBuffer->SetLayout(gridBufferLayout);
@@ -57,14 +60,14 @@ unsigned Lab3Application::Run() {
     //
     // Shader module
     //
-    Shader shader(vertexShaderSrc, fragmentShaderSrc);
-
+    auto* shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+    shader->Bind();
 
     //
     // camera
     //
     // perspective on how to observe the world: field of view: 45 degrees, aspect ration of 1, near and far plane of 1 and -10
-    glm::mat4 projectionMatrix = glm::perspective(45.0f, 1.0f, 1.0f, -10.0f);
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, 1.0f, -10.0f);
 
     // view transformation Matrix: position and orientation of the matrix
     // --> position of the camera ("eye"/position of the camera, Position where the camera is looking at, Normalized up vektor)
@@ -72,26 +75,30 @@ unsigned Lab3Application::Run() {
 
     // model transformation: scale, rotate, translate (model = scale*rotate*translate)
     // scale: scale matrix, scaling of each axis
-    glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
+    glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
     // rotate: rotation matrix, rotation angle in radians, rotation axis
-    glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), 45.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
     //translate: 
-    glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(10.0f, 0.0f, 0.0f));
+    glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
     auto chessboardModelMatrix = translate * rotate * scale;
 
-    shader.UploadUniformMatrix4fv("u_Model", chessboardModelMatrix);
-    shader.UploadUniformMatrix4fv("u_View", viewMatrix);
-    shader.UploadUniformMatrix4fv("u_Projection", projectionMatrix); 
+    shader->UploadUniformMatrix4fv("u_Model", chessboardModelMatrix);
+    shader->UploadUniformMatrix4fv("u_View", viewMatrix);
+    shader->UploadUniformMatrix4fv("u_Projection", projectionMatrix); 
+
+    glm::vec4 color = glm::vec4(0.0, 0.0, 0.0, 1.0);
+    shader->UploadUniformFloat4("u_Color", color);
 
     while (!glfwWindowShouldClose(window))
     {
 
         //preparation of Window and Shader
         glClear(GL_COLOR_BUFFER_BIT);
-        shader->Bind();
+        glClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
+
         glDrawElements(
             GL_TRIANGLES,      // mode
             indices.size(),    // count
@@ -108,8 +115,8 @@ unsigned Lab3Application::Run() {
     }
 
     // Cleanup of Shader and Buffers
-    shader.Unbind();
-    shader.~Shader();
+    shader->Unbind();
+    shader->~Shader();
     vertexArray->Unbind();
     //vertexArray->~VertexArray();
     unsigned int stop_error_code = stop();

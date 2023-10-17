@@ -97,6 +97,7 @@ unsigned Lab2Application::Run() {
     // Shader module
     //
     auto * shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+    shader->Bind(); 
 
     glfwSetKeyCallback(window, Lab2Application::key_callback);
 
@@ -105,7 +106,6 @@ unsigned Lab2Application::Run() {
     {
         //preparation of Window and Shader
         glClear(GL_COLOR_BUFFER_BIT);
-        shader->Bind();
         glDrawElements(
                 GL_TRIANGLES,      // mode
                 indices.size(),    // count

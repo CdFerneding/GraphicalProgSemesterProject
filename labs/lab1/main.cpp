@@ -82,6 +82,7 @@ int draw_triangle()
         GL_FALSE,                   // normalize if neccessary
         sizeof(float) * 2,          // stride: amount of bytes between every vertexes (not between attributes!)
         nullptr);                   // inside the space of a vertex: offset to first attribute (here you could write also "0" or "(const void*)0"
+                                    // for example if a color is used in addition to position then the offset would point to the first color attribute
     glEnableVertexAttribArray(0);   // opbligatory to actually use the written buffer. Can stand anywhere where the buffer was already defined, since openGL is a state machine
 
     // Vertex and fragment shader source code

@@ -5,7 +5,7 @@
 // Vertex and fragment shader source code
 const std::string vertexShaderSrc = R"(
         #version 430 core
-        layout(location = 0) in vec4 position;
+        layout(location = 0) in vec3 position;
         uniform mat4 u_Model;
         uniform mat4 u_View;
         uniform mat4 u_Projection;
@@ -18,10 +18,10 @@ const std::string vertexShaderSrc = R"(
 const std::string fragmentShaderSrc = R"(
         #version 430 core
         out vec4 color;
-        void main()
-        {
-            color = vec4(1.0, 0.5, 0.0, 1.0);
-        }
-    )";
+        uniform vec4 u_Color;
+        int main(){
+            color = u_Color;
+        }    
+)";
 
 #endif //PROG2002_SHADER_H

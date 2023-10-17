@@ -4,32 +4,35 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
-Shader::Shader(const std::string& vertexShaderSrc, const std::string& fragmentShaderSrc) 
+Shader::Shader(const std::string& vertexShaderSrc, const std::string& fragmentShaderSrc)
 {
-
-    // Convert shader source code from std::string to raw char pointer.
-    auto vss = vertexShaderSrc.c_str();
-    auto fss = fragmentShaderSrc.c_str();
     // Compile vertex shader, fragment shader
-    VertexShader = CompileShader(GL_VERTEX_SHADER, vss);
-    FragmentShader =  CompileShader(GL_FRAGMENT_SHADER, fss);
+    VertexShader = CompileShader(GL_VERTEX_SHADER, vertexShaderSrc.c_str());
+    FragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc.c_str());
 
     // Create shader program and attach compiled shaders
     ShaderProgram = glCreateProgram();
     glAttachShader(ShaderProgram, VertexShader);
     glAttachShader(ShaderProgram, FragmentShader);
     glLinkProgram(ShaderProgram);
+
     GLint success;
     glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
-        char infoLog[512];
-        glGetProgramInfoLog(ShaderProgram, 512, NULL, infoLog);
-        std::cerr << "Shader program linking failed: " << infoLog << std::endl;
+        GLint logSize;
+        glGetProgramiv(ShaderProgram, GL_INFO_LOG_LENGTH, &logSize);
+        std::vector<GLchar> infoLog(logSize);
+        glGetProgramInfoLog(ShaderProgram, logSize, NULL, infoLog.data());
+
+        std::cerr << "Shader program linking failed: " << infoLog.data() << std::endl;
     }
-    glDeleteShader(VertexShader); 
-    glDeleteShader(FragmentShader); 
-    glUseProgram(ShaderProgram);
+    else {
+        // Successful linking, no need to call glUseProgram(ShaderProgram) here.
+        glDeleteShader(VertexShader);
+        glDeleteShader(FragmentShader);
+    }
 }
 
 
@@ -50,6 +53,10 @@ void Shader::Unbind() const
     glUseProgram(0);
 }
 
+void Shader::UploadUniformFloat1(const std::string& name, const GLfloat number) {
+    GLuint location = glGetUniformLocation(ShaderProgram, name.c_str());
+    glUniform1f(location, number);
+}
 
 void Shader::UploadUniformFloat2(const std::string& name, const glm::vec2& vector)
 {
@@ -57,11 +64,17 @@ void Shader::UploadUniformFloat2(const std::string& name, const glm::vec2& vecto
     glUniform2f(location, vector.x, vector.y);
 }
 
-void Shader::UploadUniformMatrix4fv(const std::string& name, const glm::mat4& matrix) {
+void Shader::UploadUniformFloat4(const std::string& name, const glm::vec4& vector)
+{
     GLuint location = glGetUniformLocation(ShaderProgram, name.c_str());
-    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+    glUniform4f(location, vector[0], vector[1], vector[2], vector[3]);
 }
 
+void Shader::UploadUniformMatrix4fv(const std::string& name, const glm::mat4& matrix) {
+    GLuint location = glGetUniformLocation(ShaderProgram, name.c_str());
+    std::cout << location << std::endl;
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+}
 
 GLuint Shader::CompileShader(GLenum shaderType, const char * shaderSrc)
 {
