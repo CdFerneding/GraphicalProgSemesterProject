@@ -62,16 +62,16 @@ void Lab2Application::move(Direction direction) {
 
 unsigned Lab2Application::Run() {
     current_application = this;
-    auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
-    // auto triangle = GeometricTools::UnitGrid2DWithColor(numberOfSquare); code with the color not in the shader
-
+    //auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
+    auto triangle = GeometricTools::UnitGrid2DWithColor(numberOfSquare); //code with the color not in the shader
+    std::cout << triangle.size() << " " << triangle.size() / 7 << std::endl;
     auto vertexArray = std::make_shared<VertexArray>();
     auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
 
     auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
     auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false}
-        //,{ShaderDataType::Float4, "color", false} // When we use the color in the vertexBuffer
+        ,{ShaderDataType::Float4, "color", false} // When we use the color in the vertexBuffer
     }));
 
     auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
@@ -128,7 +128,7 @@ unsigned Lab2Application::Run() {
     while (!glfwWindowShouldClose(window))
     {
         //preparation of Window and Shader
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
         glDrawElements(
                 GL_TRIANGLES,      // mode
                 indices.size(),    // count
