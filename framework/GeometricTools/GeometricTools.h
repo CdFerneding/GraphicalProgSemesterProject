@@ -49,20 +49,20 @@ namespace GeometricTools {
                 float yPos = (j / static_cast<float>(divisions))*2 - 1.0f;
                 vertices.push_back(xPos);
                 vertices.push_back(yPos);
-                vertices.push_back(0.0); // Set z-coordinate to 0 for a 2D grid
+                vertices.push_back(0.0f); // Set z-coordinate to 0 for a 2D grid
                 //put the color in rgba format
-                if(i%2==j%2) {
+                if(i%2 == j%2) {
                     vertices.push_back(1.0);
                     vertices.push_back(1.0);
                     vertices.push_back(1.0);
                     vertices.push_back(1.0);
-                    std::cout << xPos << ", " << yPos << ", 0.0, 1.0, 1.0, 1.0, 1.0" << std::endl;
+                    //std::cout << xPos << ", " << yPos << ", 1.0, 1.0, 1.0, 1.0, 1.0" << std::endl;
                 }else {
                     vertices.push_back(0.0);
                     vertices.push_back(0.0);
                     vertices.push_back(0.0);
                     vertices.push_back(1.0);
-                    std::cout << xPos << ", " << yPos << ", 0.0, 0.0, 0.0, 0.0, 1.0" << std::endl;
+                    //std::cout << xPos << ", " << yPos << ", 0.0, 0.0, 0.0, 0.0, 1.0" << std::endl;
                 }
             }
         }

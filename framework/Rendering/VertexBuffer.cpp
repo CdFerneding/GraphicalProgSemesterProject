@@ -21,25 +21,6 @@ VertexBuffer::~VertexBuffer()
 
 void VertexBuffer::Bind() const
 {
-    //Iterate over Layout.begin()
-    unsigned countBufferLayout = 0;
-    unsigned offset = 0;
-    for (auto i = Layout.begin(); i != Layout.end(); ++i) {
-        // get the attribute
-        auto attribute = *i;
-        glVertexAttribPointer(countBufferLayout, ShaderDataTypeComponentCount(attribute.Type),
-                              ShaderDataTypeToOpenGLBaseType(attribute.Type), attribute.Normalized,
-                              (int) attribute.Size, (const void *) offset);
-
-        std::cout << "glVertextAttribPointer(" << countBufferLayout << ", " << ShaderDataTypeComponentCount(attribute.Type)
-                    << ", " << ShaderDataTypeToOpenGLBaseType(attribute.Type) << ", " << attribute.Normalized << ", "
-                    << attribute.Size << ", " << offset << ")" << std::endl;
-
-        glEnableVertexAttribArray(countBufferLayout);
-        offset += attribute.Size;
-        //std::cout << "glEnableVertexAttribArray(" << countBufferLayout << ")" << std::endl;
-        countBufferLayout++;
-    }
 
     // make the vertex buffer active
     glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);

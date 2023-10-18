@@ -63,22 +63,45 @@ void Lab2Application::move(Direction direction) {
 unsigned Lab2Application::Run() {
     current_application = this;
     auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
+    // auto triangle = GeometricTools::UnitGrid2DWithColor(numberOfSquare); code with the color not in the shader
 
     auto vertexArray = std::make_shared<VertexArray>();
     auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
 
     auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
     auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
-        {ShaderDataType::Float3, "OpenGLLayout", false},
-        {ShaderDataType::Float3, "position"}
+        {ShaderDataType::Float3, "position", false}
+        //,{ShaderDataType::Float4, "color", false} // When we use the color in the vertexBuffer
     }));
+
     auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
 
+
+    //auto vertexBufferColor = std::make_shared<VertexBuffer>(color.data(), sizeof(float) * color.size());
+    //vertexBufferColor->SetLayout(*gridBufferLayout2);
+
+
     vertexBuffer->SetLayout(*gridBufferLayout);
+    //vertexArray->AddVertexBuffer(vertexBufferColor);
     vertexArray->AddVertexBuffer(vertexBuffer);
     vertexArray->SetIndexBuffer(indexBuffer);
 
     vertexArray->Bind();
+
+    /*auto square = GeometricTools::UnitGrid2DWithColor(numberOfSquare);
+
+    auto vertexArray2 = std::make_shared<VertexArray>();
+    auto indices2 = GeometricTools::UnitGrid2DTopology(numberOfSquare);
+
+    auto indexBuffer2 = std::make_shared<IndexBuffer>(indices2.data(), sizeof(unsigned int) * indices2.size());
+
+    auto vertexBuffer2 = std::make_shared<VertexBuffer>(square.data(), sizeof(float) * square.size());
+
+    vertexBuffer2->SetLayout(*gridBufferLayout);
+    vertexArray2->AddVertexBuffer(vertexBuffer2);
+    vertexArray2->SetIndexBuffer(indexBuffer2);*/
+
+    //vertexArray2->Bind();
 
     //glGenVertexArrays(1, &vertexArrayId);
     //glBindVertexArray(vertexArrayId);
@@ -97,7 +120,7 @@ unsigned Lab2Application::Run() {
     // Shader module
     //
     auto * shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
-    shader->Bind(); 
+    shader->Bind();
 
     glfwSetKeyCallback(window, Lab2Application::key_callback);
 
