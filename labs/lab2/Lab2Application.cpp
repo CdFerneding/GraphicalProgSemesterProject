@@ -68,7 +68,7 @@ std::vector<float> Lab2Application::createSelectionSquare() const {
 
     std::vector<float> selectionSquare = {
             1 - (2.0f/(float) numberOfSquare)*(float (currentXSelected)), -1 + (2.0f/(float) numberOfSquare)*(float (currentYSelected)), 0.1, 0, 1, 0, 1,
-            1 - (2.0f/(float) numberOfSquare)*(float (currentXSelected)), -1 + (2.0f/(float) numberOfSquare)*(float (currentYSelected+1)), 0, 0, 1, 0, 1,
+            1 - (2.0f/(float) numberOfSquare)*(float (currentXSelected)), -1 + (2.0f/(float) numberOfSquare)*(float (currentYSelected+1)), 0.1, 0, 1, 0, 1,
             1 - (2.0f/(float) numberOfSquare)*(float (currentXSelected+1)), -1 + (2.0f/(float) numberOfSquare)*(float (currentYSelected+1)),  0.1, 0, 1, 0, 1,
             1 - (2.0f/(float) numberOfSquare)*(float (currentXSelected+1)), -1 + (2.0f/(float) numberOfSquare)*(float (currentYSelected)), 0.1, 0, 1, 0, 1
     };
