@@ -42,31 +42,63 @@ void Lab2Application::key_callback(GLFWwindow* window, int key, int scancode, in
     }
 }
 void Lab2Application::move(Direction direction) {
+    hasMoved = true;
     switch (direction) {
         case UP:
             currentYSelected = (currentYSelected + 1) % numberOfSquare;
             break;
         case DOWN:
-            currentYSelected = (currentYSelected + 7) % numberOfSquare;
+            currentYSelected = (currentYSelected - 1) % numberOfSquare;
             break;
         case LEFT:
-            currentXSelected = (currentXSelected + 7) % numberOfSquare;
-            break;
-        case RIGHT:
             currentXSelected = (currentXSelected + 1) % numberOfSquare;
             break;
+        case RIGHT:
+            currentXSelected = (currentXSelected - 1) % numberOfSquare;
+            break;
+        default:
+            hasMoved = false;
+            break;
     }
-    std::cout << "Current X: " << currentXSelected << std::endl;
-    std::cout << "Current Y: " << currentYSelected << std::endl;
+    //std::cout << "Current X: " << currentXSelected << std::endl;
+    //std::cout << "Current Y: " << currentYSelected << std::endl;
+}
+
+std::vector<float> Lab2Application::createSelectionSquare() const {
+
+    std::vector<float> selectionSquare = {
+            1 - (2.0f/(float) numberOfSquare)*(float (currentXSelected)), -1 + (2.0f/(float) numberOfSquare)*(float (currentYSelected)), 0.1, 0, 1, 0, 1,
+            1 - (2.0f/(float) numberOfSquare)*(float (currentXSelected)), -1 + (2.0f/(float) numberOfSquare)*(float (currentYSelected+1)), 0, 0, 1, 0, 1,
+            1 - (2.0f/(float) numberOfSquare)*(float (currentXSelected+1)), -1 + (2.0f/(float) numberOfSquare)*(float (currentYSelected+1)),  0.1, 0, 1, 0, 1,
+            1 - (2.0f/(float) numberOfSquare)*(float (currentXSelected+1)), -1 + (2.0f/(float) numberOfSquare)*(float (currentYSelected)), 0.1, 0, 1, 0, 1
+    };
+
+    //print the selection square
+    /*for (int i = 0; i < selectionSquare.size(); i+=7) {
+        std::cout << selectionSquare[i] << ", " << selectionSquare[i+1] << ", " << selectionSquare[i+2] << std::endl;
+    }*/
+
+    return selectionSquare;
 }
 
 unsigned Lab2Application::Run() {
     current_application = this;
     //auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
     auto triangle = GeometricTools::UnitGrid2DWithColor(numberOfSquare); //code with the color not in the shader
-    std::cout << triangle.size() << " " << triangle.size() / 7 << std::endl;
+
+    auto selectionSquare = createSelectionSquare();
+
+    triangle.insert(triangle.end(), selectionSquare.begin(), selectionSquare.end());
+
+    //std::cout << triangle.size() << " " << triangle.size() / 7 << std::endl;
     auto vertexArray = std::make_shared<VertexArray>();
     auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
+
+    auto indicesSelectionSquare = GeometricTools::TopologySquare2D;
+
+    for(unsigned i : indicesSelectionSquare) {
+        indices.push_back((numberOfSquare+1) * (numberOfSquare+1) * 2 + i);
+    }
 
     auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
     auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
@@ -127,8 +159,16 @@ unsigned Lab2Application::Run() {
 
     while (!glfwWindowShouldClose(window))
     {
+
         //preparation of Window and Shader
         glClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
+
+        // Update the vertex buffer with the new data for the selection square using the currentXSelected and currentYSelected
+        if(hasMoved) {
+            vertexBuffer->BufferSubData(sizeof(float) * 7 * (numberOfSquare + 1) * (numberOfSquare + 1) * 2,
+                                        sizeof(float) * 7 * 4, createSelectionSquare().data());
+            hasMoved = false;
+        }
         glDrawElements(
                 GL_TRIANGLES,      // mode
                 indices.size(),    // count

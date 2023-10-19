@@ -2,6 +2,7 @@
 #define PROG2002_LAB2APPLICATION_H
 
 #include <string>
+#include <vector>
 #include "GLFWApplication.h"
 
 enum Direction {
@@ -17,6 +18,9 @@ class Lab2Application : public GLFWApplication {
         unsigned int currentYSelected;
         const unsigned int numberOfSquare = 8;
         static Lab2Application * current_application;
+        bool hasMoved;
+
+        std::vector<float> createSelectionSquare() const;
     public:
         explicit Lab2Application(const std::string &name = "Lab2", const std::string &version = "0.0.1",
                                  unsigned int width = 800, unsigned int height = 800);
