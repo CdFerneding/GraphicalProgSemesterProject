@@ -5,6 +5,7 @@
 #include "./../Rendering/VertexBuffer.h"
 #include "VertextArray.h"
 #include "../../framework/Rendering/Shader.h"
+#include "RenderCommands.h"
 
 Lab2Application * Lab2Application::current_application = nullptr;
 
@@ -100,7 +101,7 @@ unsigned Lab2Application::Run() {
         indices.push_back((numberOfSquare+1) * (numberOfSquare+1) * 2 + i);
     }
 
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
     auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false}
         ,{ShaderDataType::Float4, "color", false} // When we use the color in the vertexBuffer
@@ -108,49 +109,28 @@ unsigned Lab2Application::Run() {
 
     auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
 
+    auto cube = GeometricTools::UnitCubeWithColor(1,0,0,1);
 
-    //auto vertexBufferColor = std::make_shared<VertexBuffer>(color.data(), sizeof(float) * color.size());
-    //vertexBufferColor->SetLayout(*gridBufferLayout2);
+    auto vertexArrayCube = std::make_shared<VertexArray>();
 
+    auto indicesCube = GeometricTools::CubeTopology;
+
+    auto indexBufferCube = std::make_shared<IndexBuffer>(indicesCube.data(), indicesCube.size());
+
+    auto vertexBufferCube = std::make_shared<VertexBuffer>(cube.data(), sizeof(unsigned int) * cube.size());
+
+    vertexBufferCube->SetLayout(*gridBufferLayout);
+    vertexArrayCube->AddVertexBuffer(vertexBufferCube);
+    vertexArrayCube->SetIndexBuffer(indexBufferCube);
+
+    vertexArrayCube->Bind();
 
     vertexBuffer->SetLayout(*gridBufferLayout);
-    //vertexArray->AddVertexBuffer(vertexBufferColor);
     vertexArray->AddVertexBuffer(vertexBuffer);
     vertexArray->SetIndexBuffer(indexBuffer);
 
     vertexArray->Bind();
 
-    /*auto square = GeometricTools::UnitGrid2DWithColor(numberOfSquare);
-
-    auto vertexArray2 = std::make_shared<VertexArray>();
-    auto indices2 = GeometricTools::UnitGrid2DTopology(numberOfSquare);
-
-    auto indexBuffer2 = std::make_shared<IndexBuffer>(indices2.data(), sizeof(unsigned int) * indices2.size());
-
-    auto vertexBuffer2 = std::make_shared<VertexBuffer>(square.data(), sizeof(float) * square.size());
-
-    vertexBuffer2->SetLayout(*gridBufferLayout);
-    vertexArray2->AddVertexBuffer(vertexBuffer2);
-    vertexArray2->SetIndexBuffer(indexBuffer2);*/
-
-    //vertexArray2->Bind();
-
-    //glGenVertexArrays(1, &vertexArrayId);
-    //glBindVertexArray(vertexArrayId);
-
-
-    //
-    // index module
-    //
-    //IndexBuffer indexBuffer(indices, 6);
-    //indexBuffer.Bind();
-
-    // Define the vertex attribute layout of the bound buffer
-    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
-    //glEnableVertexAttribArray(0);
-    //
-    // Shader module
-    //
     auto * shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
     shader->Bind();
 
@@ -161,7 +141,8 @@ unsigned Lab2Application::Run() {
     {
 
         //preparation of Window and Shader
-        glClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
+        RenderCommands::SetClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
+        RenderCommands::Clear();
 
         // Update the vertex buffer with the new data for the selection square using the currentXSelected and currentYSelected
         if(hasMoved) {
@@ -169,15 +150,16 @@ unsigned Lab2Application::Run() {
                                         sizeof(float) * 7 * 4, createSelectionSquare().data());
             hasMoved = false;
         }
-        glDrawElements(
-                GL_TRIANGLES,      // mode
-                indices.size(),    // count
-                GL_UNSIGNED_INT,   // type
-                nullptr           // element array buffer offset
+
+        RenderCommands::DrawIndex(
+                GL_TRIANGLES,
+                vertexArray
         );
 
-        //buffer and drawing
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        RenderCommands::DrawIndex(
+                GL_TRIANGLES,
+                vertexArrayCube
+        );
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
@@ -187,6 +169,7 @@ unsigned Lab2Application::Run() {
     // Cleanup of Shader and Buffers
     shader->Unbind();
     vertexArray->Unbind();
+    vertexArrayCube->Unbind();
 
     return stop();
 }

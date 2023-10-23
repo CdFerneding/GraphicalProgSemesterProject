@@ -25,7 +25,8 @@ add_library(Rendering VertexBuffer.cpp
         BufferLayout.h
         BufferAttribute.h
         VertextArray.cpp
-        VertextArray.h "Shader.h" "Shader.cpp")
+        VertextArray.h "Shader.h" "Shader.cpp"
+        RenderCommands.h)
 
 add_library(Framework::Rendering ALIAS Rendering)
 
