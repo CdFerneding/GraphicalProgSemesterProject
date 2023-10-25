@@ -133,11 +133,11 @@ unsigned Lab3Application::Run() {
     // camera
     //
     // perspective on how to observe the world: field of view: 45 degrees, aspect ration of 1, near and far plane of 1 and -10
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, 1.0f, -10.0f);
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, 1.0f, 10.0f);
 
     // view transformation Matrix: position and orientation of the matrix
     // --> position of the camera ("eye"/position of the camera, Position where the camera is looking at, Normalized up vector)
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, -2, 1), glm::vec3(0, 1, 0), glm::vec3(0, 1, 0));
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, -2, 0.5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
     // model transformation: scale, rotate, translate (model = scale*rotate*translate)
     // scale: scale matrix, scaling of each axis

@@ -8,6 +8,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <stb_image.h>
+
 
 Lab4Application* Lab4Application::current_application = nullptr;
 
@@ -160,6 +162,9 @@ unsigned Lab4Application::Run() {
 
     glfwSetKeyCallback(window, Lab4Application::key_callback);
 
+    
+    this->LoadTexture(std::string(TEXTURES_DIR) + std::string("black-tile.jpg"), 0);
+
 
     while (!glfwWindowShouldClose(window))
     {
@@ -210,4 +215,42 @@ unsigned Lab4Application::stop() {
 
 Lab4Application* Lab4Application::getLab4Application() {
     return Lab4Application::current_application;
+}
+
+
+GLuint Lab4Application::LoadTexture(const std::string& filepath, GLuint slot)
+{
+    /**
+     *  - Use the STB Image library to load a texture in here
+     *  - Initialize the texture into an OpenGL texture
+     *    - This means creating a texture with glGenTextures or glCreateTextures (4.5)
+     *    - And transferring the loaded texture data into this texture
+     *    - And setting the texture format
+     *  - Finally return the valid texture
+     */
+
+     /** Image width, height, bit depth */
+    int w, h, bpp;
+    auto pixels = stbi_load(filepath.c_str(), &w, &h, &bpp, STBI_rgb_alpha);
+
+    /*Generate a texture object and upload the loaded image to it.*/
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glActiveTexture(GL_TEXTURE0 + slot);//Texture Unit
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+    /** Set parameters for the texture */
+    //Wrapping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    //Filtering 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    /** Very important to free the memory returned by STBI, otherwise we leak */
+    if (pixels)
+        stbi_image_free(pixels);
+
+    return tex;
 }
