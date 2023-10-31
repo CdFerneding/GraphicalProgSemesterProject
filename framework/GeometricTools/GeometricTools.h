@@ -48,27 +48,36 @@ namespace GeometricTools {
 
                 // Calculate and add texture coordinates
                 // these coordinates take the the edges to the area to know where to apply the texture (in our case the chessboard floor)
+                // explanation: opengl starts the coordinate grid from the bottom left with 0,0
                 // bottom left:
-                if (xPos == -1.0 && yPos == -1.0) {
-                    vertices.push_back(0.0);
-                    vertices.push_back(0.0); 
-                }
-                else if (xPos == 1.0 && yPos == -1.0) { // bottom right corner:
-                    vertices.push_back(1.0);
-                    vertices.push_back(0.0);
-                }
-                else if (xPos == 1.0 && yPos == 1.0) { // bottom top right corner:
-                    vertices.push_back(1.0);
-                    vertices.push_back(1.0);
-                }
-                else if (xPos == -1.0 && yPos == 1.0) { // top left corner:
-                    vertices.push_back(0.0);
-                    vertices.push_back(1.0);
-                }
-                else {
-                    vertices.push_back(0.0);
-                    vertices.push_back(0.0);
-                }
+                //if (xPos == -1.0 && yPos == -1.0) {
+                //    vertices.push_back(0.0);
+                //    vertices.push_back(0.0); 
+                //}
+                //else if (xPos == 1.0 && yPos == -1.0) { // bottom right corner:
+                //    vertices.push_back(1.0);
+                //    vertices.push_back(0.0);
+                //}
+                //else if (xPos == 1.0 && yPos == 1.0) { // bottom top right corner:
+                //    vertices.push_back(1.0);
+                //    vertices.push_back(1.0);
+                //}
+                //else if (xPos == -1.0 && yPos == 1.0) { // top left corner:
+                //    vertices.push_back(0.0);
+                //    vertices.push_back(1.0);
+                //}
+                //else {
+                //    vertices.push_back(0.0);
+                //    vertices.push_back(0.0);
+                //}
+                // 
+                // shorter:
+                // Calculate and add texture coordinates
+                float u = fmod(xPos, 1.0f); // Repeat texture across grid
+                float v = fmod(yPos, 1.0f);
+                vertices.push_back(u);
+                vertices.push_back(v);
+
             }
         }
 
