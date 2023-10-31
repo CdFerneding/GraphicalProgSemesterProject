@@ -8,7 +8,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <stb_image.h>
+#include "./../Rendering/TextureManager.h"
+
+// stb requires the use of a compilation definition
+#define STB_IMAGE_IMPLEMENTATION
 
 
 Lab4Application* Lab4Application::current_application = nullptr;
@@ -89,7 +92,7 @@ std::vector<float> Lab4Application::createSelectionSquare() const {
 unsigned Lab4Application::Run() {
     current_application = this;
     //auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
-    auto triangle = GeometricTools::UnitGrid2DWithColor(numberOfSquare); //code with the color not in the shader
+    auto triangle = GeometricTools::UnitGrid2DWithTextureCoords(numberOfSquare); 
 
     auto selectionSquare = createSelectionSquare();
 
@@ -106,10 +109,11 @@ unsigned Lab4Application::Run() {
     }
 
     auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
-    auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
-        {ShaderDataType::Float3, "position", false}
-        ,{ShaderDataType::Float4, "color", false} // When we use the color in the vertexBuffer
-        }));
+    auto gridBufferLayout = BufferLayout({
+        {ShaderDataType::Float3, "position"},
+        {ShaderDataType::Float4, "color"}, // When we use the color in the vertexBuffer
+        {ShaderDataType::Float2, "texCoords"} 
+    });
 
     auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
 
@@ -118,7 +122,7 @@ unsigned Lab4Application::Run() {
     //vertexBufferColor->SetLayout(*gridBufferLayout2);
 
 
-    vertexBuffer->SetLayout(*gridBufferLayout);
+    vertexBuffer->SetLayout(gridBufferLayout);
     //vertexArray->AddVertexBuffer(vertexBufferColor);
     vertexArray->AddVertexBuffer(vertexBuffer);
     vertexArray->SetIndexBuffer(indexBuffer);
@@ -139,7 +143,7 @@ unsigned Lab4Application::Run() {
 
     // view transformation Matrix: position and orientation of the matrix
     // --> position of the camera ("eye"/position of the camera, Position where the camera is looking at, Normalized up vector)
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, -2, 0.5), glm::vec3(0, 1, 0), glm::vec3(0, 1, 0));
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, -2, 0.5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
     // model transformation: scale, rotate, translate (model = scale*rotate*translate)
     // scale: scale matrix, scaling of each axis
@@ -157,14 +161,29 @@ unsigned Lab4Application::Run() {
     shader->UploadUniformMatrix4fv("u_View", viewMatrix);
     shader->UploadUniformMatrix4fv("u_Projection", projectionMatrix);
 
+
     glm::vec4 color = glm::vec4(0.0, 0.0, 0.0, 1.0);
     shader->UploadUniformFloat4("u_Color", color);
 
     glfwSetKeyCallback(window, Lab4Application::key_callback);
 
-    
-    this->LoadTexture(std::string(TEXTURES_DIR) + std::string("black-tile.jpg"), 0);
 
+    //
+    // Texture module
+    //
+    TextureManager* textureManager = TextureManager::GetInstance(); 
+    bool success = textureManager->LoadTexture2DRGBA("blacktile", "./resources/textures/black-tile.jpg", GL_TEXTURE0, true);
+    if (!success) {
+        // Handle the case where the texture couldn't be loaded
+        // Error handling
+    }
+
+    GLuint textureUnit = textureManager->GetUnitByName("texture"); 
+
+    // Give the texture to the shader
+    shader->UploadUniform1i("uTexture", 0); 
+
+    // delete the texture manager, when the application is finished
 
     while (!glfwWindowShouldClose(window))
     {
@@ -215,42 +234,4 @@ unsigned Lab4Application::stop() {
 
 Lab4Application* Lab4Application::getLab4Application() {
     return Lab4Application::current_application;
-}
-
-
-GLuint Lab4Application::LoadTexture(const std::string& filepath, GLuint slot)
-{
-    /**
-     *  - Use the STB Image library to load a texture in here
-     *  - Initialize the texture into an OpenGL texture
-     *    - This means creating a texture with glGenTextures or glCreateTextures (4.5)
-     *    - And transferring the loaded texture data into this texture
-     *    - And setting the texture format
-     *  - Finally return the valid texture
-     */
-
-     /** Image width, height, bit depth */
-    int w, h, bpp;
-    auto pixels = stbi_load(filepath.c_str(), &w, &h, &bpp, STBI_rgb_alpha);
-
-    /*Generate a texture object and upload the loaded image to it.*/
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glActiveTexture(GL_TEXTURE0 + slot);//Texture Unit
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-    /** Set parameters for the texture */
-    //Wrapping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    //Filtering 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    /** Very important to free the memory returned by STBI, otherwise we leak */
-    if (pixels)
-        stbi_image_free(pixels);
-
-    return tex;
 }

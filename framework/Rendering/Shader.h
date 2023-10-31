@@ -15,11 +15,12 @@ public:
 	void UploadUniformFloat4(const std::string& name, const glm::vec4& vector);
 	void UploadUniformMatrix4fv(const std::string& name, const glm::mat4& matrix);
 
+	void UploadUniform1i(const std::string& name, const GLuint slot);
+
 private:
 	GLuint VertexShader;
 	GLuint FragmentShader;
-	GLuint ShaderProgram;
-
+	GLuint ShaderProgram; 
 	GLuint CompileShader(GLenum shaderType, const char * shaderSrc);
 };
 

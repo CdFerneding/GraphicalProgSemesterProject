@@ -76,6 +76,12 @@ void Shader::UploadUniformMatrix4fv(const std::string& name, const glm::mat4& ma
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
+void Shader::UploadUniform1i(const std::string& name, const GLuint slot) {
+    GLuint location = glGetUniformLocation(ShaderProgram, name.c_str());
+    std::cout << location << std::endl;
+    glUniform1i(location, slot);
+}
+
 GLuint Shader::CompileShader(GLenum shaderType, const char * shaderSrc)
 {
     auto shader = glCreateShader(shaderType);
