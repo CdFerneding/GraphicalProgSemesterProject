@@ -47,9 +47,9 @@ add_custom_command(
   ${CMAKE_CURRENT_SOURCE_DIR}/resources/textures/black-tile.jpg
   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures/black-tile.jpg)
 
-# Custom command to copy the 'dog.png' texture in a similar manner to 'cat.png'
+# Custom command to copy all files from the 'textures' directory
 add_custom_command(
   TARGET ${PROJECT_NAME} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/textures/white-tile.jpg
-  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures/white-tile.jpg)
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/textures
+  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures)
