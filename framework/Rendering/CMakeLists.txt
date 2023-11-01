@@ -26,7 +26,12 @@ add_library(Rendering VertexBuffer.cpp
         BufferAttribute.h
         VertextArray.cpp
         VertextArray.h "Shader.h" "Shader.cpp"
-        RenderCommands.h)
+        RenderCommands.h
+        Camera.h
+        OrthographicCamera.h
+        PerspectiveCamera.h
+        OrthographicCamera.cpp
+        PerspectiveCamera.cpp)
 
 add_library(Framework::Rendering ALIAS Rendering)
 
