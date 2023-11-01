@@ -5,6 +5,8 @@
 #include "./../Rendering/VertexBuffer.h"
 #include "VertextArray.h"
 #include "../../framework/Rendering/Shader.h"
+#include "OrthographicCamera.h"
+#include "PerspectiveCamera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -206,38 +208,28 @@ unsigned Lab3Application::Run() {
     auto* shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
     shader->Bind();
 
-    //
-    // camera
-    //
-    // perspective on how to observe the world: field of view: 45 degrees, aspect ration of 1, near and far plane of 1 and -10
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, 1.0f, -10.0f);
+    // Use PerspectiveCamera class instead
+    PerspectiveCamera camera = PerspectiveCamera(PerspectiveCamera::Frustrum{glm::radians(45.0f), 1.0f, 1.0f, 1.0f, -10.0f},
+                                                 glm::vec3(0.0f, -3.0f, 2.0f),
+                                                 glm::vec3(0.0f, 0.0f, 0.0f),
+                                                 glm::vec3(0.0f, 1.0f, 0.0f));
 
-    // view transformation Matrix: position and orientation of the matrix
-    // --> position of the camera ("eye"/position of the camera, Position where the camera is looking at, Normalized up vector)
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, -3, 2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    shader->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
 
-    // model transformation: scale, rotate, translate (model = scale*rotate*translate)
-    // scale: scale matrix, scaling of each axis
-    glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    shader->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
 
-    // rotate: rotation matrix, rotation angle in radians, rotation axis
-    glm::mat4 rotate = glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    //translate: 
-    glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-
-    auto chessboardModelMatrix = translate * rotate * scale;
-
-    shader->UploadUniformMatrix4fv("u_Model", chessboardModelMatrix);
-    shader->UploadUniformMatrix4fv("u_View", viewMatrix);
-    shader->UploadUniformMatrix4fv("u_Projection", projectionMatrix);
+    shader->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
 
     glm::vec4 color = glm::vec4(0.0, 0.0, 0.0, 1.0);
     shader->UploadUniformFloat4("u_Color", color);
 
     glfwSetKeyCallback(window, Lab3Application::key_callback);
 
+    glEnable(GL_MULTISAMPLE);  // Enabled Multisample
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendEquation(GL_FUNC_ADD);
     //Wireframe mode
     //RenderCommands::SetWireframeMode();
 
@@ -248,7 +240,7 @@ unsigned Lab3Application::Run() {
         RenderCommands::SetClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
         RenderCommands::Clear();
 
-        shader->UploadUniformMatrix4fv("u_Model", chessboardModelMatrix);
+        shader->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
 
         // Update the vertex buffer with the new data for the selection square using the currentXSelected and currentYSelected
 

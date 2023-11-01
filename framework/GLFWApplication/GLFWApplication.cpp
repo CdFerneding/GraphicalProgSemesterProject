@@ -19,6 +19,7 @@ unsigned int GLFWApplication::Init() {
     // GLFW window hints
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_SAMPLES, 16 );
     // Create a GLFW window
     window = glfwCreateWindow(800, 800, "Triangle", nullptr, nullptr);
     if (!window) {
