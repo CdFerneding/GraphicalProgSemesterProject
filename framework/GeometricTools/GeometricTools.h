@@ -3,6 +3,8 @@
 
 #include <array>
 #include <vector>
+#include "glm/fwd.hpp"
+#include "glm/ext/matrix_transform.hpp"
 
 namespace GeometricTools {
     constexpr std::array<float, 3*2> UnitTriangle2D = {-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f}; // [2,3]
@@ -60,7 +62,6 @@ namespace GeometricTools {
                 //std::cout << xPos << ", " << yPos << ", 1.0, 1.0, 1.0, 1.0, 1.0" << std::endl;
             }
         }
-        std::cout << count << std::endl;
         for (int i = 0; i <= divisions; ++i) {
             float xPos = (i / static_cast<float>(divisions))*2 - 1.0f;
             for (int j = 0; j <= divisions; ++j) {
@@ -154,7 +155,46 @@ namespace GeometricTools {
             0, 1, 5,
             5, 4, 0
     };
+    auto rotateCube(std::vector<float> cube, float angleX, float rotationAngleY, float rotationAngleZ) {
 
+        std::vector<float> newCube;
+
+        glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(angleX), glm::vec3(1.0f, 0.0f, 0.0f));
+        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotationAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
+        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotationAngleZ), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        for (int i = 0; i < cube.size(); i+=7) {
+            glm::vec4 vertex = glm::vec4(cube[i], cube[i+1], cube[i+2], 1.0f);
+            vertex = rotationMatrix * vertex;
+            newCube.push_back(vertex.x);
+            newCube.push_back(vertex.y);
+            newCube.push_back(vertex.z);
+            newCube.push_back(cube[i+3]);
+            newCube.push_back(cube[i+4]);
+            newCube.push_back(cube[i+5]);
+            newCube.push_back(cube[i+6]);
+        }
+
+        return newCube;
+
+    }
+
+    std::vector<float> translateCube(std::vector<float> cube, float x, float y, float z) {
+        glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+        std::vector<float> newCube;
+        for (int i = 0; i < cube.size(); i+=7) {
+            glm::vec4 vertex = glm::vec4(cube[i], cube[i+1], cube[i+2], 1.0f);
+            vertex = translationMatrix * vertex;
+            newCube.push_back(vertex.x);
+            newCube.push_back(vertex.y);
+            newCube.push_back(vertex.z);
+            newCube.push_back(cube[i+3]);
+            newCube.push_back(cube[i+4]);
+            newCube.push_back(cube[i+5]);
+            newCube.push_back(cube[i+6]);
+        }
+        return newCube;
+    }
 }
 
 

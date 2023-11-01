@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <RenderCommands.h>
 
 Lab3Application* Lab3Application::current_application = nullptr;
 
@@ -15,6 +16,10 @@ Lab3Application::Lab3Application(const std::string& name, const std::string& ver
     unsigned int width, unsigned int height) : GLFWApplication(name, version, width, height) {
     currentXSelected = 0;
     currentYSelected = 0;
+    rotationAngleX = 0;
+    rotationAngleY = 0;
+    currentRotationAngleX = 0;
+    currentRotationAngleY = 0;
 }
 
 Lab3Application::~Lab3Application() {
@@ -35,6 +40,22 @@ void Lab3Application::key_callback(GLFWwindow* window, int key, int scancode, in
             break;
         case GLFW_KEY_RIGHT:
             getLab3Application()->move(RIGHT);
+            break;
+
+        // There is two key for up and left because we are using a QWERTY and an AZERTY keyboard
+        case GLFW_KEY_Z:
+        case GLFW_KEY_W:
+		    getLab3Application()->rotateCube(UP);
+		    break;
+        case GLFW_KEY_A:
+        case GLFW_KEY_Q:
+            getLab3Application()->rotateCube(LEFT);
+            break;
+        case GLFW_KEY_S:
+            getLab3Application()->rotateCube(DOWN);
+            break;
+        case GLFW_KEY_D:
+            getLab3Application()->rotateCube(RIGHT);
             break;
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -67,13 +88,33 @@ void Lab3Application::move(Direction direction) {
     //std::cout << "Current Y: " << currentYSelected << std::endl;
 }
 
+void Lab3Application::rotateCube(Direction direction) {
+    hasRotated = true;
+    switch (direction) {
+        case UP:
+			rotationAngleX = ( (int) rotationAngleX + 5) % 360;
+			break;
+        case DOWN:
+            rotationAngleX = ((int) rotationAngleX - 5) % 360;
+            break;
+        case LEFT:
+			rotationAngleY = ((int) rotationAngleY + 5) % 360;
+			break;
+        case RIGHT:
+			rotationAngleY = ((int) rotationAngleY - 5) % 360;
+			break;
+		default:
+			break;
+    }
+}
+
 std::vector<float> Lab3Application::createSelectionSquare() const {
 
     std::vector<float> selectionSquare = {
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 0, 1, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.0, 0, 1, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.0, 0, 1, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 0, 1, 0, 1
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.0, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.0, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 1, 0, 0, 1
     };
 
     //print the selection square
@@ -84,8 +125,25 @@ std::vector<float> Lab3Application::createSelectionSquare() const {
     return selectionSquare;
 }
 
+std::vector<float> Lab3Application::createSelectionCube() const {
+    std::vector<float> selectionSquare = {
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.1, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.1, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.1, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.1, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 2.0f / (float)numberOfSquare, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 2.0f / (float)numberOfSquare, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  2.0f / (float)numberOfSquare, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 2.0f / (float)numberOfSquare, 1, 0, 0, 1
+    };
+    return selectionSquare;
+}
+
 unsigned Lab3Application::Run() {
     current_application = this;
+    hasRotated = false;
+    hasMoved = false;
+
     //auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
     auto triangle = GeometricTools::UnitGrid2DWithColor(numberOfSquare); //code with the color not in the shader
 
@@ -103,7 +161,7 @@ unsigned Lab3Application::Run() {
         indices.push_back((numberOfSquare + 1) * (numberOfSquare + 1) * 2 + i);
     }
 
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
     auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false}
         ,{ShaderDataType::Float4, "color", false} // When we use the color in the vertexBuffer
@@ -111,6 +169,21 @@ unsigned Lab3Application::Run() {
 
     auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
 
+    auto cube = createSelectionCube();
+
+    auto vertexArrayCube = std::make_shared<VertexArray>();
+
+    auto indicesCube = GeometricTools::CubeTopology;
+
+    auto indexBufferCube = std::make_shared<IndexBuffer>(indicesCube.data(), indicesCube.size());
+
+    auto vertexBufferCube = std::make_shared<VertexBuffer>(cube.data(), sizeof(float) * cube.size());
+
+    vertexBufferCube->SetLayout(*gridBufferLayout);
+    vertexArrayCube->AddVertexBuffer(vertexBufferCube);
+    vertexArrayCube->SetIndexBuffer(indexBufferCube);
+
+    vertexArrayCube->Bind();
 
     //auto vertexBufferColor = std::make_shared<VertexBuffer>(color.data(), sizeof(float) * color.size());
     //vertexBufferColor->SetLayout(*gridBufferLayout2);
@@ -126,6 +199,10 @@ unsigned Lab3Application::Run() {
     //
     // Shader module
     //
+
+    auto* shaderCube = new Shader(vertexShaderSrc, fragmentShaderSrc);
+    shaderCube->Bind();
+
     auto* shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
     shader->Bind();
 
@@ -133,11 +210,11 @@ unsigned Lab3Application::Run() {
     // camera
     //
     // perspective on how to observe the world: field of view: 45 degrees, aspect ration of 1, near and far plane of 1 and -10
-    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, 1.0f, 10.0f);
+    glm::mat4 projectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, 1.0f, -10.0f);
 
     // view transformation Matrix: position and orientation of the matrix
     // --> position of the camera ("eye"/position of the camera, Position where the camera is looking at, Normalized up vector)
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, -2, 0.5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, -3, 2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
     // model transformation: scale, rotate, translate (model = scale*rotate*translate)
     // scale: scale matrix, scaling of each axis
@@ -160,25 +237,77 @@ unsigned Lab3Application::Run() {
 
     glfwSetKeyCallback(window, Lab3Application::key_callback);
 
+    glEnable(GL_DEPTH_TEST);
+    //Wireframe mode
+    //RenderCommands::SetWireframeMode();
 
     while (!glfwWindowShouldClose(window))
     {
 
         //preparation of Window and Shader
-        glClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        RenderCommands::SetClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
+        RenderCommands::Clear();
+
+        shader->UploadUniformMatrix4fv("u_Model", chessboardModelMatrix);
 
         // Update the vertex buffer with the new data for the selection square using the currentXSelected and currentYSelected
+
+        RenderCommands::DrawIndex(
+            GL_TRIANGLES,
+            vertexArray
+        );
         if (hasMoved) {
-            vertexBuffer->BufferSubData(sizeof(float) * 7 * (numberOfSquare + 1) * (numberOfSquare + 1) * 2,
-                sizeof(float) * 7 * 4, createSelectionSquare().data());
+            selectionSquare = createSelectionCube();
+            //Update vertexbufferCube with the content of createSelectionCube
+            vertexBufferCube->BufferSubData(0,
+                				sizeof(float) * 7 * 8, selectionSquare.data());
+
+
             hasMoved = false;
+            hasRotated = true;
+            currentRotationAngleX = 0;
+            currentRotationAngleY = 0;
         }
-        glDrawElements(
-            GL_TRIANGLES,      // mode
-            indices.size(),    // count
-            GL_UNSIGNED_INT,   // type
-            nullptr           // element array buffer offset
+
+        if (hasRotated) {
+            // Get the gravity center of the cube
+            float gravityPoint[3] = {0.0f, 0.0f, 0.0f};
+
+            for (int i = 0; i < selectionSquare.size(); i+=7) {
+                gravityPoint[0] += selectionSquare[i];
+                gravityPoint[1] += selectionSquare[i+1];
+                gravityPoint[2] += selectionSquare[i+2];
+            }
+
+            gravityPoint[0] /= 8;
+            gravityPoint[1] /= 8;
+            gravityPoint[2] /= 8;
+
+            //To rotate the cube around its center, we need to translate the cube to the origin, rotate it and translate it back to its original position
+
+            selectionSquare = GeometricTools::translateCube(selectionSquare, -gravityPoint[0], -gravityPoint[1], -gravityPoint[2]);
+
+            //Rotate the cube
+
+            selectionSquare = GeometricTools::rotateCube(selectionSquare, rotationAngleX-currentRotationAngleX, rotationAngleY-currentRotationAngleY, 0);
+
+            //Translate the cube back to its original position
+
+            selectionSquare = GeometricTools::translateCube(selectionSquare, gravityPoint[0], gravityPoint[1], gravityPoint[2]);
+
+            //Update vertexbufferCube with the content of new_cube
+			vertexBufferCube->BufferSubData(0,
+                								sizeof(float) * 7 * 8, selectionSquare.data());
+
+            currentRotationAngleX = rotationAngleX;
+            currentRotationAngleY = rotationAngleY;
+
+			hasRotated = false;
+        }
+
+        RenderCommands::DrawIndex(
+            GL_TRIANGLES,
+            vertexArrayCube
         );
 
         //buffer and drawing
