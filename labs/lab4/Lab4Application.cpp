@@ -82,7 +82,7 @@ std::vector<float> Lab4Application::createSelectionSquare() const {
     };
 
     //print the selection square
-    /*for (int i = 0; i < selectionSquare.size(); i+=7) {
+    /*for (int i = 0; i < selectionSquare.size(); i += 7) {
         std::cout << selectionSquare[i] << ", " << selectionSquare[i+1] << ", " << selectionSquare[i+2] << std::endl;
     }*/
 
@@ -91,12 +91,12 @@ std::vector<float> Lab4Application::createSelectionSquare() const {
 
 unsigned Lab4Application::Run() {
     current_application = this;
-    //auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
-    auto triangle = GeometricTools::UnitGrid2DWithTextureCoords(numberOfSquare); 
+    auto grid = GeometricTools::UnitGridGeometry2DWTCoords(numberOfSquare);
+    //auto square = GeometricTools::UnitSquare2D;
 
     auto selectionSquare = createSelectionSquare();
 
-    triangle.insert(triangle.end(), selectionSquare.begin(), selectionSquare.end());
+    grid.insert(grid.end(), selectionSquare.begin(), selectionSquare.end());
 
     //std::cout << triangle.size() << " " << triangle.size() / 7 << std::endl;
     auto vertexArray = std::make_shared<VertexArray>();
@@ -108,22 +108,18 @@ unsigned Lab4Application::Run() {
         indices.push_back((numberOfSquare + 1) * (numberOfSquare + 1) * 2 + i);
     }
 
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), sizeof(unsigned int) * indices.size());
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
     auto gridBufferLayout = BufferLayout({
         {ShaderDataType::Float3, "position"},
-        {ShaderDataType::Float4, "color"}, // When we use the color in the vertexBuffer
-        {ShaderDataType::Float2, "texCoords"} 
-    });
+        //{ShaderDataType::Float4, "color"}, // When we use the color in the vertexBuffer
+        {ShaderDataType::Float2, "texCoords"}
+        });
 
-    auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
-
-
-    //auto vertexBufferColor = std::make_shared<VertexBuffer>(color.data(), sizeof(float) * color.size());
-    //vertexBufferColor->SetLayout(*gridBufferLayout2);
-
+    auto vertexBuffer = std::make_shared<VertexBuffer>(grid.data(), sizeof(float) * grid.size());
 
     vertexBuffer->SetLayout(gridBufferLayout);
     //vertexArray->AddVertexBuffer(vertexBufferColor);
+
     vertexArray->AddVertexBuffer(vertexBuffer);
     vertexArray->SetIndexBuffer(indexBuffer);
 
@@ -143,7 +139,7 @@ unsigned Lab4Application::Run() {
 
     // view transformation Matrix: position and orientation of the matrix
     // --> position of the camera ("eye"/position of the camera, Position where the camera is looking at, Normalized up vector)
-    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, -2, 0.5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0, -2, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
     // model transformation: scale, rotate, translate (model = scale*rotate*translate)
     // scale: scale matrix, scaling of each axis
@@ -172,13 +168,14 @@ unsigned Lab4Application::Run() {
     // Texture module
     //
     TextureManager* textureManager = TextureManager::GetInstance(); 
-    bool success = textureManager->LoadTexture2DRGBA("blacktile", "./resources/textures/black-tile.jpg", GL_TEXTURE0, true);
+    bool success = textureManager->LoadTexture2DRGBA("grass", "resources/textures/grass2.jpg", 0, true);
     if (!success) {
         // Handle the case where the texture couldn't be loaded
         // Error handling
+        std::cout << "Texture not loaded correctly." << std::endl;
     }
 
-    GLuint textureUnit = textureManager->GetUnitByName("texture"); 
+    GLuint textureUnit = textureManager->GetUnitByName("grass"); 
 
     // Give the texture to the shader
     shader->UploadUniform1i("uTexture", 0); 

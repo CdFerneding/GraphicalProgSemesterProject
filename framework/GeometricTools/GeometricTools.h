@@ -7,7 +7,12 @@
 namespace GeometricTools {
     constexpr std::array<float, 3*2> UnitTriangle2D = {-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f}; // [2,3]
 
-    constexpr std::array<float, 3*4> UnitSquare2D = {-0.5f, -0.5f, 0.5f, -0.5f, 0.5f,  0.5f, -0.5f,  0.5f}; // [2,4]
+    constexpr std::array<float, 5*4> UnitSquare2D = {
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+        -0.5f, 0.5f, 0.0f, 0.0f, 1.0f
+    };
 
     auto UnitSquare2DDivider(const unsigned int divisions) {
         // Divide each value of UnitSquare2D by the value in divisions
@@ -35,13 +40,13 @@ namespace GeometricTools {
     // Constexpr version that generates the geometry of the grid, including texture coordinates
     // The shape of the generated data is PPTTPPTTPPTT..., meaning two components for position
     // and two components for texture coordinates.
-    auto UnitGrid2DWithTextureCoords(const unsigned int divisions) {
+    auto UnitGridGeometry2DWTCoords(const unsigned int divisions) {
         //Create a std vector of float with size of 3*divisions*divisions
         std::vector<float> vertices;
         for (int i = 0; i <= divisions; ++i) {
-            float xPos = (i / static_cast<float>(divisions)) * 2 - 1.0f;
+            float xPos = (i / static_cast<float>(divisions)) - 1.0f;
             for (int j = 0; j <= divisions; ++j) {
-                float yPos = (j / static_cast<float>(divisions)) * 2 - 1.0f;
+                float yPos = (j / static_cast<float>(divisions)) - 1.0f;
                 vertices.push_back(xPos);
                 vertices.push_back(yPos);
                 vertices.push_back(0.0f); // Set z-coordinate to 0 for a 3D grid
@@ -50,33 +55,32 @@ namespace GeometricTools {
                 // these coordinates take the the edges to the area to know where to apply the texture (in our case the chessboard floor)
                 // explanation: opengl starts the coordinate grid from the bottom left with 0,0
                 // bottom left:
-                //if (xPos == -1.0 && yPos == -1.0) {
-                //    vertices.push_back(0.0);
-                //    vertices.push_back(0.0); 
-                //}
-                //else if (xPos == 1.0 && yPos == -1.0) { // bottom right corner:
-                //    vertices.push_back(1.0);
-                //    vertices.push_back(0.0);
-                //}
-                //else if (xPos == 1.0 && yPos == 1.0) { // bottom top right corner:
-                //    vertices.push_back(1.0);
-                //    vertices.push_back(1.0);
-                //}
-                //else if (xPos == -1.0 && yPos == 1.0) { // top left corner:
-                //    vertices.push_back(0.0);
-                //    vertices.push_back(1.0);
-                //}
-                //else {
-                //    vertices.push_back(0.0);
-                //    vertices.push_back(0.0);
-                //}
-                // 
-                // shorter:
-                // Calculate and add texture coordinates
-                float u = fmod(xPos, 1.0f); // Repeat texture across grid
-                float v = fmod(yPos, 1.0f);
-                vertices.push_back(u);
-                vertices.push_back(v);
+                if (xPos == -1.0 && yPos == -1.0) {
+                    vertices.push_back(0.0);
+                    vertices.push_back(0.0); 
+                } else if (xPos == 1.0 && yPos == -1.0) { // bottom right corner:
+                    vertices.push_back(1.0);
+                    vertices.push_back(0.0);
+                }
+                else if (xPos == 1.0 && yPos == 1.0) { // bottom top right corner:
+                    vertices.push_back(1.0);
+                    vertices.push_back(1.0);
+                }
+                else if (xPos == -1.0 && yPos == 1.0) { // top left corner:
+                    vertices.push_back(0.0);
+                    vertices.push_back(1.0);
+                }
+                else {
+                    vertices.push_back(0.0);
+                    vertices.push_back(0.0);
+                }
+                 
+                //shorter:
+                //// Calculate and add texture coordinates
+                //float u = fmod(xPos, 1.0f); // Repeat texture across grid
+                //float v = fmod(yPos, 1.0f);
+                //vertices.push_back(u);
+                //vertices.push_back(v);
 
             }
         }
