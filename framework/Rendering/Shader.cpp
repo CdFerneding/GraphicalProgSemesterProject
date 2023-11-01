@@ -72,13 +72,11 @@ void Shader::UploadUniformFloat4(const std::string& name, const glm::vec4& vecto
 
 void Shader::UploadUniformMatrix4fv(const std::string& name, const glm::mat4& matrix) {
     GLuint location = glGetUniformLocation(ShaderProgram, name.c_str());
-    //std::cout << location << std::endl;
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 void Shader::UploadUniform1i(const std::string& name, const GLuint slot) {
     GLuint location = glGetUniformLocation(ShaderProgram, name.c_str());
-    std::cout << location << std::endl;
     glUniform1i(location, slot);
 }
 
