@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "./../Rendering/TextureManager.h"
+#include <RenderCommands.h>
 
 // stb requires the use of a compilation definition
 #define STB_IMAGE_IMPLEMENTATION
@@ -25,6 +26,7 @@ Lab4Application::Lab4Application(const std::string& name, const std::string& ver
 Lab4Application::~Lab4Application() {
 
 }
+
 void Lab4Application::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     if (action == GLFW_PRESS) {
@@ -40,6 +42,22 @@ void Lab4Application::key_callback(GLFWwindow* window, int key, int scancode, in
             break;
         case GLFW_KEY_RIGHT:
             getLab4Application()->move(RIGHT);
+            break;
+
+         // There is two key for up and left because we are using a QWERTY and an AZERTY keyboard
+        case GLFW_KEY_Z:
+        case GLFW_KEY_W:
+            getLab4Application()->rotateCube(UP);
+            break;
+        case GLFW_KEY_A:
+        case GLFW_KEY_Q:
+            getLab4Application()->rotateCube(LEFT);
+            break;
+        case GLFW_KEY_S:
+            getLab4Application()->rotateCube(DOWN);
+            break;
+        case GLFW_KEY_D:
+            getLab4Application()->rotateCube(RIGHT);
             break;
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -72,20 +90,54 @@ void Lab4Application::move(Direction direction) {
     //std::cout << "Current Y: " << currentYSelected << std::endl;
 }
 
+void Lab4Application::rotateCube(Direction direction) {
+    hasRotated = true;
+    switch (direction) {
+    case UP:
+        rotationAngleX = ((int)rotationAngleX + 5) % 360;
+        break;
+    case DOWN:
+        rotationAngleX = ((int)rotationAngleX - 5) % 360;
+        break;
+    case LEFT:
+        rotationAngleY = ((int)rotationAngleY + 5) % 360;
+        break;
+    case RIGHT:
+        rotationAngleY = ((int)rotationAngleY - 5) % 360;
+        break;
+    default:
+        break;
+    }
+}
+
 std::vector<float> Lab4Application::createSelectionSquare() const {
 
     std::vector<float> selectionSquare = {
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 0, 1, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.0, 0, 1, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.0, 0, 1, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 0, 1, 0, 1
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.0, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.0, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 1, 0, 0, 1
     };
 
     //print the selection square
-    /*for (int i = 0; i < selectionSquare.size(); i += 7) {
+    /*for (int i = 0; i < selectionSquare.size(); i+=7) {
         std::cout << selectionSquare[i] << ", " << selectionSquare[i+1] << ", " << selectionSquare[i+2] << std::endl;
     }*/
 
+    return selectionSquare;
+}
+
+std::vector<float> Lab4Application::createSelectionCube() const {
+    std::vector<float> selectionSquare = {
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.1, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.1, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.1, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.1, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 2.0f / (float)numberOfSquare, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 2.0f / (float)numberOfSquare, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  2.0f / (float)numberOfSquare, 1, 0, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 2.0f / (float)numberOfSquare, 1, 0, 0, 1
+    };
     return selectionSquare;
 }
 
@@ -94,30 +146,29 @@ unsigned Lab4Application::Run() {
     auto grid = GeometricTools::UnitGridGeometry2DWTCoords(numberOfSquare);
     //auto square = GeometricTools::UnitSquare2D;
 
-    auto selectionSquare = createSelectionSquare();
+    //auto selectionSquare = createSelectionSquare();
 
-    grid.insert(grid.end(), selectionSquare.begin(), selectionSquare.end());
+    //grid.insert(grid.end(), selectionSquare.begin(), selectionSquare.end());
 
     //std::cout << triangle.size() << " " << triangle.size() / 7 << std::endl;
     auto vertexArray = std::make_shared<VertexArray>();
-    auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
+    auto indices = GeometricTools::UnitGrid2DTopologyLab4(numberOfSquare);
 
-    auto indicesSelectionSquare = GeometricTools::TopologySquare2D;
+    //auto indicesSelectionSquare = GeometricTools::TopologySquare2D;
 
-    for (unsigned i : indicesSelectionSquare) {
-        indices.push_back((numberOfSquare + 1) * (numberOfSquare + 1) * 2 + i);
-    }
+    //for (unsigned i : indicesSelectionSquare) {
+    //    indices.push_back((numberOfSquare + 1) * (numberOfSquare + 1) * 2 + i);
+    //}
 
     auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
-    auto gridBufferLayout = BufferLayout({
-        {ShaderDataType::Float3, "position"},
-        //{ShaderDataType::Float4, "color"}, // When we use the color in the vertexBuffer
-        {ShaderDataType::Float2, "texCoords"}
-        });
+    auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
+        {ShaderDataType::Float3, "position", false},
+        {ShaderDataType::Float2, "texCoords", false}
+        }));
 
     auto vertexBuffer = std::make_shared<VertexBuffer>(grid.data(), sizeof(float) * grid.size());
 
-    vertexBuffer->SetLayout(gridBufferLayout);
+    vertexBuffer->SetLayout(*gridBufferLayout);
     //vertexArray->AddVertexBuffer(vertexBufferColor);
 
     vertexArray->AddVertexBuffer(vertexBuffer);
@@ -181,6 +232,8 @@ unsigned Lab4Application::Run() {
     shader->UploadUniform1i("uTexture", 0); 
 
     // delete the texture manager, when the application is finished
+
+    //RenderCommands::SetWireframeMode();
 
     while (!glfwWindowShouldClose(window))
     {

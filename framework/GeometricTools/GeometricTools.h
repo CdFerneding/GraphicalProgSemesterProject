@@ -46,9 +46,9 @@ namespace GeometricTools {
         //Create a std vector of float with size of 3*divisions*divisions
         std::vector<float> vertices;
         for (int i = 0; i <= divisions; ++i) {
-            float xPos = (i / static_cast<float>(divisions)) - 1.0f;
+            float xPos = (i / static_cast<float>(divisions)) * 2 - 1.0f;
             for (int j = 0; j <= divisions; ++j) {
-                float yPos = (j / static_cast<float>(divisions)) - 1.0f;
+                float yPos = (j / static_cast<float>(divisions)) * 2 - 1.0f;
                 vertices.push_back(xPos);
                 vertices.push_back(yPos);
                 vertices.push_back(0.0f); // Set z-coordinate to 0 for a 3D grid
@@ -57,33 +57,9 @@ namespace GeometricTools {
                 // these coordinates take the the edges to the area to know where to apply the texture (in our case the chessboard floor)
                 // explanation: opengl starts the coordinate grid from the bottom left with 0,0
                 // bottom left:
-                if (xPos == -1.0 && yPos == -1.0) {
-                    vertices.push_back(0.0);
-                    vertices.push_back(0.0); 
-                } else if (xPos == 1.0 && yPos == -1.0) { // bottom right corner:
-                    vertices.push_back(1.0);
-                    vertices.push_back(0.0);
-                }
-                else if (xPos == 1.0 && yPos == 1.0) { // bottom top right corner:
-                    vertices.push_back(1.0);
-                    vertices.push_back(1.0);
-                }
-                else if (xPos == -1.0 && yPos == 1.0) { // top left corner:
-                    vertices.push_back(0.0);
-                    vertices.push_back(1.0);
-                }
-                else {
-                    vertices.push_back(0.0);
-                    vertices.push_back(0.0);
-                }
-                 
-                //shorter:
-                //// Calculate and add texture coordinates
-                //float u = fmod(xPos, 1.0f); // Repeat texture across grid
-                //float v = fmod(yPos, 1.0f);
-                //vertices.push_back(u);
-                //vertices.push_back(v);
-
+                
+                vertices.push_back((xPos + 1) / 2);
+                vertices.push_back((yPos + 1) / 2);
             }
         }
 
@@ -160,7 +136,7 @@ namespace GeometricTools {
                 // Calculate the indices for the four vertices of each quad
                 isWhite = (i%2==j%2);
 
-                    //It will add 384
+                //It will add 384
                 unsigned int topLeft = i * (divisions + 1) + j;
                 unsigned int topRight = topLeft + 1;
                 unsigned int bottomLeft = (i + 1) * (divisions + 1) + j;
@@ -176,6 +152,38 @@ namespace GeometricTools {
                 indices.push_back(topRight+ (isWhite ? 81: 0));
                 indices.push_back(bottomRight+ (isWhite ? 81: 0));
                 indices.push_back(bottomLeft+ (isWhite ? 81: 0));
+                //std::cout << topLeft << " " << topRight << " " << bottomLeft << " " << topRight << " " << bottomRight << " " << bottomLeft << std::endl;
+            }
+        }
+
+        return indices;
+    }
+
+    auto UnitGrid2DTopologyLab4(const unsigned int divisions) {
+
+        std::vector<unsigned int> indices;
+
+        for (unsigned int i = 0; i < divisions; i++) {
+            for (unsigned int j = 0; j < divisions; j++) {
+                //(divisions+1) * (divisions+1)
+                // Calculate the indices for the four vertices of each quad
+
+                //It will add 384
+                unsigned int topLeft = i * (divisions + 1) + j;
+                unsigned int topRight = topLeft + 1;
+                unsigned int bottomLeft = (i + 1) * (divisions + 1) + j;
+                unsigned int bottomRight = bottomLeft + 1;
+
+                // Define two triangles for each quad
+                // Triangle 1: top left -> top right -> bottom left
+                indices.push_back(topLeft);
+                indices.push_back(topRight);
+                indices.push_back(bottomLeft);
+
+                // Triangle 2: top right -> bottom right -> bottom left
+                indices.push_back(topRight);
+                indices.push_back(bottomRight);
+                indices.push_back(bottomLeft);
                 //std::cout << topLeft << " " << topRight << " " << bottomLeft << " " << topRight << " " << bottomRight << " " << bottomLeft << std::endl;
             }
         }

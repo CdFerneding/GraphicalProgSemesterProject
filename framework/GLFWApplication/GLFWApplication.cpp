@@ -36,10 +36,11 @@ unsigned int GLFWApplication::Init() {
         glfwTerminate();
         return EXIT_FAILURE;
     }
-    return EXIT_SUCCESS;
 
     // printing currently used openGL version
     std::cout << glGetString(GL_VERSION) << std::endl;
+
+    return EXIT_SUCCESS;
 }
 
 unsigned int GLFWApplication::stop() {

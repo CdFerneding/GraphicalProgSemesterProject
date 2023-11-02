@@ -30,7 +30,7 @@ private:
     std::vector<float> createSelectionSquare() const;
     std::vector<float> createSelectionCube() const;
 public:
-    explicit Lab3Application(const std::string& name = "Lab2", const std::string& version = "0.0.1",
+    explicit Lab3Application(const std::string& name = "Lab3", const std::string& version = "0.0.1",
         unsigned int width = 800, unsigned int height = 800);
     ~Lab3Application();
     unsigned Run();
