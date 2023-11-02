@@ -222,6 +222,7 @@ unsigned Lab5Application::Run() {
 
     glm::vec4 color = glm::vec4(0.0, 0.0, 0.0, 1.0);
     shader->UploadUniformFloat4("u_Color", color);
+    shader->UploadUniformFloat1("u_ambientStrength", 0.75);
 
     glfwSetKeyCallback(window, Lab5Application::key_callback);
 
@@ -232,13 +233,36 @@ unsigned Lab5Application::Run() {
     glBlendEquation(GL_FUNC_ADD);
     //Wireframe mode
     //RenderCommands::SetWireframeMode();
-
+    double seconds = 0.1f;
+    float current_ambiance_light = 1.0f;
     while (!glfwWindowShouldClose(window))
     {
-
-        //preparation of Window and Shader
-        RenderCommands::SetClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
         RenderCommands::Clear();
+
+        if(current_ambiance_light<=1.0f) {
+            RenderCommands::SetClearColor(0.663f*current_ambiance_light, 0.663f*current_ambiance_light, 0.663f*current_ambiance_light, 1); // Set clear color to a shade of gray
+        }
+        else {
+            float multiplier = -current_ambiance_light + 2.0f;
+            RenderCommands::SetClearColor(0.663f*multiplier, 0.663f*multiplier, 0.663f*multiplier,
+                                          -current_ambiance_light + 2.0f); // Set clear color to a shade of gray
+        }
+        //For every seconds print the "hello world"
+        if (glfwGetTime() > seconds) {
+            seconds+=0.01;
+            current_ambiance_light+=0.005f;
+
+            if(current_ambiance_light >= 2.0f)
+                current_ambiance_light = 0.0f;
+
+            if(current_ambiance_light<=1.0f) {
+                shader->UploadUniformFloat1("u_ambientStrength", current_ambiance_light);
+            }
+            else {
+                shader->UploadUniformFloat1("u_ambientStrength", -current_ambiance_light + 2.0f);
+            }
+        }
+        //preparation of Window and Shader
 
         shader->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
 

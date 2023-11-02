@@ -11,10 +11,12 @@ const std::string vertexShaderSrc = R"(
     uniform mat4 u_Model;
     uniform mat4 u_View;
     uniform mat4 u_Projection;
+    uniform float u_ambientStrength;
     void main()
     {
         gl_Position = u_Projection * u_View * u_Model * vec4(position, 1.0);
-        fragColor = color;
+        fragColor = u_ambientStrength * color;
+        fragColor.a = color.a; // The light doesn't change how transparent a vertex is
     }
 )";
 
