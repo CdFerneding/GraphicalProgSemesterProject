@@ -3,8 +3,7 @@
 
 #include <array>
 #include <vector>
-#include "glm/fwd.hpp"
-#include "glm/ext/matrix_transform.hpp"
+#include "../../external/glm/glm/ext/matrix_transform.hpp"
 
 namespace GeometricTools {
     constexpr std::array<float, 3*2> UnitTriangle2D = {-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f}; // [2,3]

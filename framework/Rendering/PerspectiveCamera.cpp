@@ -3,6 +3,7 @@
 #include "glm/ext/matrix_transform.hpp"
 
 
+
 PerspectiveCamera::PerspectiveCamera(const Frustrum& frustrum, const glm::vec3& position,
                                      const glm::vec3& lookAt,
                                      const glm::vec3& upVector) : Camera() {
@@ -10,12 +11,14 @@ PerspectiveCamera::PerspectiveCamera(const Frustrum& frustrum, const glm::vec3& 
     this->Position = position;
     this->LookAt = lookAt;
     this->UpVector = upVector;
-
+    PerspectiveCamera::RecalculateMatrix();
 }
 
 void PerspectiveCamera::RecalculateMatrix() {
     this->ProjectionMatrix = glm::perspective(this->CameraFrustrum.angle, this->CameraFrustrum.width / this->CameraFrustrum.height,
                                               this->CameraFrustrum.near, this->CameraFrustrum.far);
     this->ViewMatrix = glm::lookAt(this->Position, this->LookAt, this->UpVector);
-    this->ViewProjectionMatrix = this->ProjectionMatrix * this->ViewMatrix;
+
+    this->ViewProjectionMatrix = glm::mat4(1.0f);
+
 }
