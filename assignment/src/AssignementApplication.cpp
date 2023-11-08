@@ -114,10 +114,10 @@ void AssignementApplication::rotateCube(Direction direction) {
 std::vector<float> AssignementApplication::createSelectionSquare() const {
 
     std::vector<float> selectionSquare = {
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 1, 0, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.0, 1, 0, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.0, 1, 0, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 1, 0, 0, 1
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0001, 0, 1, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.0001, 0, 1, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.0001, 0, 1, 0, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0001, 0, 1, 0, 1
     };
 
     //print the selection square
@@ -147,22 +147,14 @@ unsigned AssignementApplication::Run() {
     hasRotated = false;
     hasMoved = false;
 
-    //auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
     auto triangle = GeometricTools::UnitGrid2DWithColor(numberOfSquare); //code with the color not in the shader
 
     auto selectionSquare = createSelectionSquare();
 
-    triangle.insert(triangle.end(), selectionSquare.begin(), selectionSquare.end());
-
-    //std::cout << triangle.size() << " " << triangle.size() / 7 << std::endl;
     auto vertexArray = std::make_shared<VertexArray>();
     auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
 
     auto indicesSelectionSquare = GeometricTools::TopologySquare2D;
-
-    for (unsigned i : indicesSelectionSquare) {
-        indices.push_back((numberOfSquare + 1) * (numberOfSquare + 1) * 2 + i);
-    }
 
     auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
     auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
@@ -182,18 +174,23 @@ unsigned AssignementApplication::Run() {
 
     auto vertexBufferCube = std::make_shared<VertexBuffer>(cube.data(), sizeof(float) * cube.size());
 
+    auto vertexBufferSelectionSquare = std::make_shared<VertexBuffer>(selectionSquare.data(), sizeof(float) * selectionSquare.size());
+
+    auto indexBufferSelectionCube = std::make_shared<IndexBuffer>(indicesSelectionSquare.data(), indicesSelectionSquare.size());
+
+    auto vertexArraySelectionSquare = std::make_shared<VertexArray>();
+
     vertexBufferCube->SetLayout(*gridBufferLayout);
     vertexArrayCube->AddVertexBuffer(vertexBufferCube);
     vertexArrayCube->SetIndexBuffer(indexBufferCube);
-
     vertexArrayCube->Bind();
 
-    //auto vertexBufferColor = std::make_shared<VertexBuffer>(color.data(), sizeof(float) * color.size());
-    //vertexBufferColor->SetLayout(*gridBufferLayout2);
-
+    vertexBufferSelectionSquare->SetLayout(*gridBufferLayout);
+    vertexArraySelectionSquare->AddVertexBuffer(vertexBufferSelectionSquare);
+    vertexArraySelectionSquare->SetIndexBuffer(indexBufferSelectionCube);
+    vertexArraySelectionSquare->Bind();
 
     vertexBuffer->SetLayout(*gridBufferLayout);
-    //vertexArray->AddVertexBuffer(vertexBufferColor);
     vertexArray->AddVertexBuffer(vertexBuffer);
     vertexArray->SetIndexBuffer(indexBuffer);
 
@@ -250,53 +247,13 @@ unsigned AssignementApplication::Run() {
             vertexArray
         );
         if (hasMoved) {
-            selectionSquare = createSelectionCube(1, 0, 0);
-            //Update vertexbufferCube with the content of createSelectionCube
-            vertexBufferCube->BufferSubData(0,
-                				sizeof(float) * 7 * 8, selectionSquare.data());
-
-
+            vertexBufferSelectionSquare->BufferSubData(0, sizeof(float) * selectionSquare.size(), createSelectionSquare().data());
             hasMoved = false;
-            hasRotated = true;
-            currentRotationAngleX = 0;
-            currentRotationAngleY = 0;
         }
-
-        if (hasRotated) {
-            // Get the gravity center of the cube
-            float gravityPoint[3] = {0.0f, 0.0f, 0.0f};
-
-            for (int i = 0; i < selectionSquare.size(); i+=7) {
-                gravityPoint[0] += selectionSquare[i];
-                gravityPoint[1] += selectionSquare[i+1];
-                gravityPoint[2] += selectionSquare[i+2];
-            }
-
-            gravityPoint[0] /= 8;
-            gravityPoint[1] /= 8;
-            gravityPoint[2] /= 8;
-
-            //To rotate the cube around its center, we need to translate the cube to the origin, rotate it and translate it back to its original position
-
-            selectionSquare = GeometricTools::translateCube(selectionSquare, -gravityPoint[0], -gravityPoint[1], -gravityPoint[2]);
-
-            //Rotate the cube
-
-            selectionSquare = GeometricTools::rotateCube(selectionSquare, rotationAngleX-currentRotationAngleX, rotationAngleY-currentRotationAngleY, 0);
-
-            //Translate the cube back to its original position
-
-            selectionSquare = GeometricTools::translateCube(selectionSquare, gravityPoint[0], gravityPoint[1], gravityPoint[2]);
-
-            //Update vertexbufferCube with the content of new_cube
-			vertexBufferCube->BufferSubData(0,
-                								sizeof(float) * 7 * 8, selectionSquare.data());
-
-            currentRotationAngleX = rotationAngleX;
-            currentRotationAngleY = rotationAngleY;
-
-			hasRotated = false;
-        }
+        RenderCommands::DrawIndex(
+                GL_TRIANGLES,
+                vertexArraySelectionSquare
+        );
 
         RenderCommands::DrawIndex(
             GL_TRIANGLES,
@@ -314,6 +271,8 @@ unsigned AssignementApplication::Run() {
     // Cleanup of Shader and Buffers
     shader->Unbind();
     vertexArray->Unbind();
+    vertexArraySelectionSquare->Unbind();
+    vertexArrayCube->Unbind();
 
     return stop();
 }
