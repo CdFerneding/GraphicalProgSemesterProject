@@ -11,6 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <RenderCommands.h>
+#include <unordered_map>
 
 AssignementApplication* AssignementApplication::current_application = nullptr;
 
@@ -128,19 +129,20 @@ std::vector<float> AssignementApplication::createSelectionSquare() const {
     return selectionSquare;
 }
 
-std::vector<float> AssignementApplication::createSelectionCube(float r, float g, float b) const {
+std::vector<float> AssignementApplication::createSelectionCube(float r, float g, float b, unsigned int x, unsigned int y) const {
     std::vector<float> selectionSquare = {
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.1, r, g, b, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.1, r, g, b, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.1, r, g, b, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.1, r, g, b, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 2.0f / (float)numberOfSquare, r, g, b, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 2.0f / (float)numberOfSquare, r, g, b, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  2.0f / (float)numberOfSquare, r, g, b, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 2.0f / (float)numberOfSquare, r, g, b, 1
+            1 - (2.0f / (float)numberOfSquare) * (float(x)) - 1.0f / ((float) numberOfSquare*2.0f), -1 + (2.0f / (float)numberOfSquare) * (float(y)) + 1.0f / ((float) numberOfSquare*2.0f), 0.1, r, g, b, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(x)) - 1.0f / ((float) numberOfSquare*2.0f), -1 + (2.0f / (float)numberOfSquare) * (float(y + 1)) - 1.0f / ((float) numberOfSquare*2.0f), 0.1, r, g, b, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(x + 1)) + 1.0f / ((float) numberOfSquare*2.0f), -1 + (2.0f / (float)numberOfSquare) * (float(y + 1)) - 1.0f / ((float) numberOfSquare*2.0f),  0.1, r, g, b, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(x + 1)) + 1.0f / ((float) numberOfSquare*2.0f), -1 + (2.0f / (float)numberOfSquare) * (float(y)) + 1.0f / ((float) numberOfSquare*2.0f), 0.1, r, g, b, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(x)) - 1.0f / ((float) numberOfSquare*2.0f), -1 + (2.0f / (float)numberOfSquare) * (float(y)) + 1.0f / ((float) numberOfSquare*2.0f), 2.0f / (float)numberOfSquare, r, g, b, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(x)) - 1.0f / ((float) numberOfSquare*2.0f), -1 + (2.0f / (float)numberOfSquare) * (float(y + 1)) - 1.0f / ((float) numberOfSquare*2.0f), 2.0f / (float)numberOfSquare, r, g, b, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(x + 1)) + 1.0f / ((float) numberOfSquare*2.0f), -1 + (2.0f / (float)numberOfSquare) * (float(y + 1)) - 1.0f / ((float) numberOfSquare*2.0f),  2.0f / (float)numberOfSquare, r, g, b, 1,
+            1 - (2.0f / (float)numberOfSquare) * (float(x + 1)) + 1.0f / ((float) numberOfSquare*2.0f), -1 + (2.0f / (float)numberOfSquare) * (float(y)) + 1.0f / ((float) numberOfSquare*2.0f), 2.0f / (float)numberOfSquare, r, g, b, 1
     };
     return selectionSquare;
 }
+
 
 unsigned AssignementApplication::Run() {
     current_application = this;
@@ -158,37 +160,63 @@ unsigned AssignementApplication::Run() {
 
     auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
     auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
-        {ShaderDataType::Float3, "position", false}
-        ,{ShaderDataType::Float4, "color", false} // When we use the color in the vertexBuffer
-        }));
+            {ShaderDataType::Float3, "position", false},
+            {ShaderDataType::Float4, "color",    false} // When we use the color in the vertexBuffer
+    }));
 
     auto vertexBuffer = std::make_shared<VertexBuffer>(triangle.data(), sizeof(float) * triangle.size());
 
-    auto cube = createSelectionCube(1, 0, 0);
+    std::vector<std::vector<float>> arrayColor = {
+            {1.0f, 0.0f, 0.0f}, //red
+            {0.0f, 0.0f, 1.0f} //blue
+    };
 
-    auto vertexArrayCube = std::make_shared<VertexArray>();
-
-    auto indicesCube = GeometricTools::CubeTopology;
-
-    auto indexBufferCube = std::make_shared<IndexBuffer>(indicesCube.data(), indicesCube.size());
-
-    auto vertexBufferCube = std::make_shared<VertexBuffer>(cube.data(), sizeof(float) * cube.size());
-
-    auto vertexBufferSelectionSquare = std::make_shared<VertexBuffer>(selectionSquare.data(), sizeof(float) * selectionSquare.size());
-
-    auto indexBufferSelectionCube = std::make_shared<IndexBuffer>(indicesSelectionSquare.data(), indicesSelectionSquare.size());
+    auto vertexBufferSelectionSquare = std::make_shared<VertexBuffer>(selectionSquare.data(),
+                                                                      sizeof(float) * selectionSquare.size());
 
     auto vertexArraySelectionSquare = std::make_shared<VertexArray>();
 
-    vertexBufferCube->SetLayout(*gridBufferLayout);
-    vertexArrayCube->AddVertexBuffer(vertexBufferCube);
-    vertexArrayCube->SetIndexBuffer(indexBufferCube);
-    vertexArrayCube->Bind();
+    auto indexBufferSelectionSquare = std::make_shared<IndexBuffer>(indicesSelectionSquare.data(), indicesSelectionSquare.size());
 
     vertexBufferSelectionSquare->SetLayout(*gridBufferLayout);
     vertexArraySelectionSquare->AddVertexBuffer(vertexBufferSelectionSquare);
-    vertexArraySelectionSquare->SetIndexBuffer(indexBufferSelectionCube);
+
+    vertexArraySelectionSquare->SetIndexBuffer(indexBufferSelectionSquare);
     vertexArraySelectionSquare->Bind();
+
+    //Create an hashmap with a vector as key and a vertexArray as value
+    std::unordered_map<unsigned int, std::shared_ptr<VertexArray>> hashMapVertexArray= {}; //Index value will be x*numberOfSquare+y
+
+    for (auto color : arrayColor) {
+        unsigned x_coordinate = color[2]==1 ? numberOfSquare - 1 : 0;
+        unsigned y_coordinate = 0;
+        for (int i = 0; i < numberOfSquare * 2; i++) {
+            auto cube = createSelectionCube(color[0], color[1], color[2], x_coordinate, y_coordinate);
+            auto vertexArrayCube = std::make_shared<VertexArray>();
+
+            auto indicesCube = GeometricTools::CubeTopology;
+
+            auto indexBufferCube = std::make_shared<IndexBuffer>(indicesCube.data(), indicesCube.size());
+
+            auto vertexBufferCube = std::make_shared<VertexBuffer>(cube.data(), sizeof(float) * cube.size());
+
+            vertexBufferCube->SetLayout(*gridBufferLayout);
+            vertexArrayCube->AddVertexBuffer(vertexBufferCube);
+            vertexArrayCube->SetIndexBuffer(indexBufferCube);
+            vertexArrayCube->Bind();
+            y_coordinate++;
+            if(y_coordinate>=numberOfSquare){
+                if(x_coordinate > 2) {
+                    y_coordinate = 0;
+                    x_coordinate--;
+                }else {
+                    y_coordinate = 0;
+                    x_coordinate++;
+                }
+            }
+            hashMapVertexArray[x_coordinate*numberOfSquare+y_coordinate] = vertexArrayCube;
+        }
+    }
 
     vertexBuffer->SetLayout(*gridBufferLayout);
     vertexArray->AddVertexBuffer(vertexBuffer);
@@ -250,18 +278,18 @@ unsigned AssignementApplication::Run() {
             vertexBufferSelectionSquare->BufferSubData(0, sizeof(float) * selectionSquare.size(), createSelectionSquare().data());
             hasMoved = false;
         }
+
+        for(auto cube : hashMapVertexArray) {
+            RenderCommands::DrawIndex(
+                    GL_TRIANGLES,
+                    cube.second
+            );
+        }
+
         RenderCommands::DrawIndex(
                 GL_TRIANGLES,
                 vertexArraySelectionSquare
         );
-
-        RenderCommands::DrawIndex(
-            GL_TRIANGLES,
-            vertexArrayCube
-        );
-
-        //buffer and drawing
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
@@ -272,7 +300,9 @@ unsigned AssignementApplication::Run() {
     shader->Unbind();
     vertexArray->Unbind();
     vertexArraySelectionSquare->Unbind();
-    vertexArrayCube->Unbind();
+    for(auto cube : hashMapVertexArray) {
+        cube.second->Unbind();
+    }
 
     return stop();
 }

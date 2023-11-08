@@ -28,7 +28,7 @@ private:
     bool hasRotated;
 
     std::vector<float> createSelectionSquare() const;
-    std::vector<float> createSelectionCube(float r, float g, float b) const;
+    std::vector<float> createSelectionCube(float r, float g, float b, unsigned int x, unsigned int y) const;
 public:
     explicit AssignementApplication(const std::string& name = "Lab3", const std::string& version = "0.0.1",
         unsigned int width = 800, unsigned int height = 600);
