@@ -48,21 +48,38 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
         // There is two key for up and left because we are using a QWERTY and an AZERTY keyboard
         case GLFW_KEY_Z:
         case GLFW_KEY_W:
-		    getAssignementApplication()->rotateCube(UP);
+		    //getAssignementApplication()->rotateCube(UP);
 		    break;
         case GLFW_KEY_A:
-            getAssignementApplication()->rotateCube(LEFT);
+            //getAssignementApplication()->rotateCube(LEFT);
+            break;
         case GLFW_KEY_Q:
             getAssignementApplication()->exit();
             break;
         case GLFW_KEY_S:
-            getAssignementApplication()->rotateCube(DOWN);
+            //getAssignementApplication()->rotateCube(DOWN);
             break;
         case GLFW_KEY_D:
-            getAssignementApplication()->rotateCube(RIGHT);
+            //getAssignementApplication()->rotateCube(RIGHT);
             break;
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
+            break;
+        case GLFW_KEY_ENTER:
+            getAssignementApplication()->select();
+            break;
+        case GLFW_KEY_P:
+            getAssignementApplication()->zoom(0.2f);
+            break;
+        case GLFW_KEY_O:
+            getAssignementApplication()->zoom(-0.2f);
+            break;
+        case GLFW_KEY_L:
+            getAssignementApplication()->rotate(15);
+            break;
+        case GLFW_KEY_H:
+            getAssignementApplication()->rotate(-15);
+            // counter-clockwise rotation
             break;
         default:
             break;
@@ -92,23 +109,52 @@ void AssignementApplication::move(Direction direction) {
     //std::cout << "Current Y: " << currentYSelected << std::endl;
 }
 
-void AssignementApplication::rotateCube(Direction direction) {
-    hasRotated = true;
-    switch (direction) {
-        case UP:
-			rotationAngleX = ( (int) rotationAngleX + 5) % 360;
-			break;
-        case DOWN:
-            rotationAngleX = ((int) rotationAngleX - 5) % 360;
-            break;
-        case LEFT:
-			rotationAngleY = ((int) rotationAngleY + 5) % 360;
-			break;
-        case RIGHT:
-			rotationAngleY = ((int) rotationAngleY - 5) % 360;
-			break;
-		default:
-			break;
+void AssignementApplication::rotate(float degree) {
+    hasCameraChanged = true;
+}
+
+void AssignementApplication::zoom(float zoomValue) {
+    hasCameraChanged = true;
+}
+
+void AssignementApplication::select() {
+     hasCubeSelected = true;
+}
+
+void AssignementApplication::updateSelectedCube() {
+    auto current_cube = cubes.find(currentXSelected*7+currentYSelected);
+    std::array<int, 2> new_coordinate = {static_cast<int>(currentXSelected), static_cast<int>(currentYSelected)};
+    if (currentCubeSelected != -1) {
+        if (current_cube != nullptr) {
+            new_coordinate = previousPosition;
+            std::cout << "Déplacement du cube sur la précédente position" << std::endl;
+            auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(currentSelectedVertexArray->getNumberOfVertexBuffers() - 1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
+            auto cube = createSelectionCube(colorSelectedCube ? 0 : 1, 0.0f, colorSelectedCube ? 1 : 0, new_coordinate[0], new_coordinate[1]);
+            vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
+            previousPosition = {static_cast<int>(-1), static_cast<int>(-1)};
+        }else {
+            std::cout << "Déplacement du cube" << std::endl;
+            auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(currentSelectedVertexArray->getNumberOfVertexBuffers() - 1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
+            auto cube = createSelectionCube(colorSelectedCube ? 0 : 1, 0.0f, colorSelectedCube ? 1 : 0, new_coordinate[0], new_coordinate[1]);
+            vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
+            previousPosition = {static_cast<int>(-1), static_cast<int>(-1)};
+            cubes.insert({currentXSelected * numberOfSquare + currentYSelected, currentSelectedVertexArray});
+            cubes.erase(currentCubeSelected);
+        }
+        currentCubeSelected = -1;
+
+    }else {
+        if (current_cube != nullptr) {
+            auto the_cube = current_cube->second;
+            currentCubeSelected = currentXSelected * numberOfSquare + currentYSelected;
+            auto vertexBuffer = the_cube->getVertexBuffer(the_cube->getNumberOfVertexBuffers() - 1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
+            colorSelectedCube = cubesColor[currentXSelected * numberOfSquare + currentYSelected];
+            auto cube = createSelectionCube(0.0f, 1.0f, 0.0f, currentXSelected, currentYSelected);
+            vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
+            currentSelectedVertexArray = the_cube;
+            std::cout << "Sélection du cube" << std::endl;
+            previousPosition = new_coordinate;
+        }
     }
 }
 
@@ -146,7 +192,7 @@ std::vector<float> AssignementApplication::createSelectionCube(float r, float g,
 
 unsigned AssignementApplication::Run() {
     current_application = this;
-    hasRotated = false;
+    hasCameraChanged = false;
     hasMoved = false;
 
     auto triangle = GeometricTools::UnitGrid2DWithColor(numberOfSquare); //code with the color not in the shader
@@ -184,9 +230,6 @@ unsigned AssignementApplication::Run() {
     vertexArraySelectionSquare->SetIndexBuffer(indexBufferSelectionSquare);
     vertexArraySelectionSquare->Bind();
 
-    //Create an hashmap with a vector as key and a vertexArray as value
-    std::unordered_map<unsigned int, std::shared_ptr<VertexArray>> hashMapVertexArray= {}; //Index value will be x*numberOfSquare+y
-
     for (auto color : arrayColor) {
         unsigned x_coordinate = color[2]==1 ? numberOfSquare - 1 : 0;
         unsigned y_coordinate = 0;
@@ -204,6 +247,8 @@ unsigned AssignementApplication::Run() {
             vertexArrayCube->AddVertexBuffer(vertexBufferCube);
             vertexArrayCube->SetIndexBuffer(indexBufferCube);
             vertexArrayCube->Bind();
+            cubes[x_coordinate * numberOfSquare + y_coordinate] = vertexArrayCube;
+            cubesColor[x_coordinate * numberOfSquare + y_coordinate] = color[2]==1;
             y_coordinate++;
             if(y_coordinate>=numberOfSquare){
                 if(x_coordinate > 2) {
@@ -214,7 +259,6 @@ unsigned AssignementApplication::Run() {
                     x_coordinate++;
                 }
             }
-            hashMapVertexArray[x_coordinate*numberOfSquare+y_coordinate] = vertexArrayCube;
         }
     }
 
@@ -278,8 +322,12 @@ unsigned AssignementApplication::Run() {
             vertexBufferSelectionSquare->BufferSubData(0, sizeof(float) * selectionSquare.size(), createSelectionSquare().data());
             hasMoved = false;
         }
+        if(hasCubeSelected) {
+            updateSelectedCube();
+            hasCubeSelected = false;
+        }
 
-        for(auto cube : hashMapVertexArray) {
+        for(auto cube : cubes) {
             RenderCommands::DrawIndex(
                     GL_TRIANGLES,
                     cube.second
@@ -300,7 +348,7 @@ unsigned AssignementApplication::Run() {
     shader->Unbind();
     vertexArray->Unbind();
     vertexArraySelectionSquare->Unbind();
-    for(auto cube : hashMapVertexArray) {
+    for(auto cube : cubes) {
         cube.second->Unbind();
     }
 

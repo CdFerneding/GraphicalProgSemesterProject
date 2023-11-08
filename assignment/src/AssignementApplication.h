@@ -3,7 +3,10 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <memory>
 #include "GLFWApplication.h"
+#include "VertextArray.h"
 
 enum Direction {
     UP,
@@ -24,9 +27,17 @@ private:
 
     const unsigned int numberOfSquare = 8;
     static AssignementApplication* current_application;
-    bool hasMoved;
-    bool hasRotated;
+    bool hasMoved = false;
+    bool hasCameraChanged = false;
+    std::unordered_map<unsigned int, std::shared_ptr<VertexArray>> cubes= {};
+    std::unordered_map<unsigned int, bool> cubesColor= {};
 
+    unsigned int currentCubeSelected = -1; //idx of the cube selected
+    std::shared_ptr<VertexArray> currentSelectedVertexArray;
+    bool hasCubeSelected = false;
+    void updateSelectedCube();
+    bool colorSelectedCube;
+    std::array<int, 2> previousPosition = {-1, -1};
     std::vector<float> createSelectionSquare() const;
     std::vector<float> createSelectionCube(float r, float g, float b, unsigned int x, unsigned int y) const;
 public:
@@ -36,10 +47,11 @@ public:
     unsigned Run();
     unsigned stop();
     void move(Direction direction);
-    void rotateCube(Direction direction);
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static AssignementApplication* getAssignementApplication();
-
+    void zoom(float zoomValue);
+    void rotate(float degree);
+    void select();
     void exit();
 };
 
