@@ -30,14 +30,16 @@ private:
     static AssignementApplication* current_application;
     bool hasMoved = false;
     bool hasCameraChanged = false;
-    std::unordered_map<unsigned int, std::shared_ptr<VertexArray>> cubes= {};
-    std::unordered_map<unsigned int, bool> cubesColor= {};
+    std::array<std::shared_ptr<VertexArray>, 8*8> cubes= {nullptr};
 
-    unsigned int currentCubeSelected = -1; //idx of the cube selected
+    int currentCubeSelected = -1; //idx of the cube selected
     std::shared_ptr<VertexArray> currentSelectedVertexArray;
+    int vertexArrayIdPerCoordinate[8][8] = {{-1},};
+    std::vector<std::shared_ptr<VertexArray>> vertexArrays;
+    std::vector<bool> colorVertexArrays;
     bool hasCubeSelected = false;
     void updateSelectedCube();
-    bool colorSelectedCube;
+
     std::array<int, 2> previousPosition = {-1, -1};
     std::vector<float> createSelectionSquare() const;
     std::vector<float> createSelectionCube(float r, float g, float b, unsigned int x, unsigned int y) const;

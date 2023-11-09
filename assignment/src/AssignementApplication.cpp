@@ -23,6 +23,12 @@ AssignementApplication::AssignementApplication(const std::string& name, const st
     rotationAngleY = 0;
     currentRotationAngleX = 0;
     currentRotationAngleY = 0;
+    //fill vertexArrayIdPerCoordinate with -1
+    for(int i=0; i < numberOfSquare; i++) {
+        for(int j=0; j < numberOfSquare; j++) {
+            vertexArrayIdPerCoordinate[i][j] = -1;
+        }
+    }
 }
 
 AssignementApplication::~AssignementApplication() {
@@ -122,37 +128,36 @@ void AssignementApplication::select() {
 }
 
 void AssignementApplication::updateSelectedCube() {
-    auto current_cube = cubes.find(currentXSelected*7+currentYSelected);
+    auto isNotEmpty = vertexArrayIdPerCoordinate[currentXSelected][currentYSelected] != -1;
     std::array<int, 2> new_coordinate = {static_cast<int>(currentXSelected), static_cast<int>(currentYSelected)};
     if (currentCubeSelected != -1) {
-        if (current_cube != nullptr) {
+        bool colorSelectedCube = colorVertexArrays[vertexArrayIdPerCoordinate[previousPosition[0]][previousPosition[1]]];
+        if (isNotEmpty) {
             new_coordinate = previousPosition;
-            std::cout << "Déplacement du cube sur la précédente position" << std::endl;
             auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(currentSelectedVertexArray->getNumberOfVertexBuffers() - 1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
             auto cube = createSelectionCube(colorSelectedCube ? 0 : 1, 0.0f, colorSelectedCube ? 1 : 0, new_coordinate[0], new_coordinate[1]);
             vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
-            previousPosition = {static_cast<int>(-1), static_cast<int>(-1)};
         }else {
-            std::cout << "Déplacement du cube" << std::endl;
-            auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(currentSelectedVertexArray->getNumberOfVertexBuffers() - 1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
-            auto cube = createSelectionCube(colorSelectedCube ? 0 : 1, 0.0f, colorSelectedCube ? 1 : 0, new_coordinate[0], new_coordinate[1]);
+            auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(
+                    currentSelectedVertexArray->getNumberOfVertexBuffers() -
+                    1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
+            auto cube = createSelectionCube(colorSelectedCube ? 0 : 1, 0.0f, colorSelectedCube ? 1 : 0,
+                                            new_coordinate[0], new_coordinate[1]);
             vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
-            previousPosition = {static_cast<int>(-1), static_cast<int>(-1)};
-            cubes.insert({currentXSelected * numberOfSquare + currentYSelected, currentSelectedVertexArray});
-            cubes.erase(currentCubeSelected);
+            vertexArrayIdPerCoordinate[new_coordinate[0]][new_coordinate[1]] = vertexArrayIdPerCoordinate[previousPosition[0]][previousPosition[1]];
+            vertexArrayIdPerCoordinate[previousPosition[0]][previousPosition[1]] = -1;
         }
+        previousPosition = {static_cast<int>(-1), static_cast<int>(-1)};
         currentCubeSelected = -1;
-
+        currentSelectedVertexArray = nullptr;
     }else {
-        if (current_cube != nullptr) {
-            auto the_cube = current_cube->second;
+        if (isNotEmpty) {
+            auto current_cube = vertexArrays[vertexArrayIdPerCoordinate[currentXSelected][currentYSelected]];
             currentCubeSelected = currentXSelected * numberOfSquare + currentYSelected;
-            auto vertexBuffer = the_cube->getVertexBuffer(the_cube->getNumberOfVertexBuffers() - 1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
-            colorSelectedCube = cubesColor[currentXSelected * numberOfSquare + currentYSelected];
+            auto vertexBuffer = current_cube->getVertexBuffer(current_cube->getNumberOfVertexBuffers() - 1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
             auto cube = createSelectionCube(0.0f, 1.0f, 0.0f, currentXSelected, currentYSelected);
             vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
-            currentSelectedVertexArray = the_cube;
-            std::cout << "Sélection du cube" << std::endl;
+            currentSelectedVertexArray = current_cube;
             previousPosition = new_coordinate;
         }
     }
@@ -230,6 +235,10 @@ unsigned AssignementApplication::Run() {
     vertexArraySelectionSquare->SetIndexBuffer(indexBufferSelectionSquare);
     vertexArraySelectionSquare->Bind();
 
+    for(int i=0; i < numberOfSquare * numberOfSquare; i++) {
+        cubes[i] = nullptr;
+    }
+    unsigned int count = 0;
     for (auto color : arrayColor) {
         unsigned x_coordinate = color[2]==1 ? numberOfSquare - 1 : 0;
         unsigned y_coordinate = 0;
@@ -248,7 +257,11 @@ unsigned AssignementApplication::Run() {
             vertexArrayCube->SetIndexBuffer(indexBufferCube);
             vertexArrayCube->Bind();
             cubes[x_coordinate * numberOfSquare + y_coordinate] = vertexArrayCube;
-            cubesColor[x_coordinate * numberOfSquare + y_coordinate] = color[2]==1;
+
+            vertexArrayIdPerCoordinate[x_coordinate][y_coordinate] = count++;
+            vertexArrays.push_back(vertexArrayCube);
+            colorVertexArrays.push_back(color[2]==1);
+
             y_coordinate++;
             if(y_coordinate>=numberOfSquare){
                 if(x_coordinate > 2) {
@@ -261,7 +274,6 @@ unsigned AssignementApplication::Run() {
             }
         }
     }
-
     vertexBuffer->SetLayout(*gridBufferLayout);
     vertexArray->AddVertexBuffer(vertexBuffer);
     vertexArray->SetIndexBuffer(indexBuffer);
@@ -328,10 +340,11 @@ unsigned AssignementApplication::Run() {
         }
 
         for(auto cube : cubes) {
-            RenderCommands::DrawIndex(
-                    GL_TRIANGLES,
-                    cube.second
-            );
+            if(cube!=nullptr)
+                RenderCommands::DrawIndex(
+                        GL_TRIANGLES,
+                        cube
+                );
         }
 
         RenderCommands::DrawIndex(
@@ -349,7 +362,7 @@ unsigned AssignementApplication::Run() {
     vertexArray->Unbind();
     vertexArraySelectionSquare->Unbind();
     for(auto cube : cubes) {
-        cube.second->Unbind();
+        cube->Unbind();
     }
 
     return stop();
