@@ -38,6 +38,9 @@ public:
 
     void SetUpVector(const glm::vec3& upVector)
     { this->UpVector = upVector; this->RecalculateMatrix(); }
+    void zoom(float zoomValue);
+
+    void rotateArroundLookAt(float degree);
 
 protected:
     void RecalculateMatrix();

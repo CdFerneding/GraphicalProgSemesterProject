@@ -8,6 +8,8 @@
 #include <memory>
 #include "GLFWApplication.h"
 #include "VertextArray.h"
+#include "Shader.h"
+#include "PerspectiveCamera.h"
 
 enum Direction {
     UP,
@@ -25,6 +27,9 @@ private:
     float currentRotationAngleX;
     float rotationAngleY;
     float currentRotationAngleY;
+
+    Shader *shader;
+    PerspectiveCamera camera;
 
     const unsigned int numberOfSquare = 8;
     static AssignementApplication* current_application;

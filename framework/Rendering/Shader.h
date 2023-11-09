@@ -1,3 +1,6 @@
+#ifndef PROG2002_SHADER_H
+#define PROG2002_SHADER_H
+
 #include <glad/glad.h>
 #include <string>
 #include <glm/glm.hpp>
@@ -24,3 +27,4 @@ private:
 	GLuint CompileShader(GLenum shaderType, const char * shaderSrc);
 };
 
+#endif //PROG2002_SHADER_H

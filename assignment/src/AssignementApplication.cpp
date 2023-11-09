@@ -1,5 +1,5 @@
 #include "AssignementApplication.h"
-#include "shader.h"
+#include "shaderAssignement.h"
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
 #include "./../Rendering/VertexBuffer.h"
@@ -36,7 +36,7 @@ AssignementApplication::~AssignementApplication() {
 }
 void AssignementApplication::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
-    if (action == GLFW_PRESS) {
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         switch (key) {
         case GLFW_KEY_UP:
             getAssignementApplication()->move(UP);
@@ -54,19 +54,19 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
         // There is two key for up and left because we are using a QWERTY and an AZERTY keyboard
         case GLFW_KEY_Z:
         case GLFW_KEY_W:
-		    //getAssignementApplication()->rotateCube(UP);
+		    getAssignementApplication()->rotate(UP);
 		    break;
         case GLFW_KEY_A:
-            //getAssignementApplication()->rotateCube(LEFT);
+            getAssignementApplication()->rotate(LEFT);
             break;
         case GLFW_KEY_Q:
             getAssignementApplication()->exit();
             break;
         case GLFW_KEY_S:
-            //getAssignementApplication()->rotateCube(DOWN);
+            getAssignementApplication()->rotate(DOWN);
             break;
         case GLFW_KEY_D:
-            //getAssignementApplication()->rotateCube(RIGHT);
+            getAssignementApplication()->rotate(RIGHT);
             break;
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -75,10 +75,10 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
             getAssignementApplication()->select();
             break;
         case GLFW_KEY_P:
-            getAssignementApplication()->zoom(0.2f);
+            getAssignementApplication()->zoom(1.0f);
             break;
         case GLFW_KEY_O:
-            getAssignementApplication()->zoom(-0.2f);
+            getAssignementApplication()->zoom(-1.0f);
             break;
         case GLFW_KEY_L:
             getAssignementApplication()->rotate(15);
@@ -116,10 +116,12 @@ void AssignementApplication::move(Direction direction) {
 }
 
 void AssignementApplication::rotate(float degree) {
+    camera.rotateArroundLookAt(degree);
     hasCameraChanged = true;
 }
 
 void AssignementApplication::zoom(float zoomValue) {
+    camera.zoom(zoomValue);
     hasCameraChanged = true;
 }
 
@@ -287,14 +289,14 @@ unsigned AssignementApplication::Run() {
     auto* shaderCube = new Shader(vertexShaderSrc, fragmentShaderSrc);
     shaderCube->Bind();
 
-    auto* shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
+    shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
     shader->Bind();
 
     // Use PerspectiveCamera class instead
-    PerspectiveCamera camera = PerspectiveCamera(PerspectiveCamera::Frustrum{glm::radians(45.0f), 1.0f, 1.0f, 1.0f, -10.0f},
+    camera = PerspectiveCamera(PerspectiveCamera::Frustrum{glm::radians(45.0f), 1.0f, 1.0f, 1.0f, -10.0f},
                                                  glm::vec3(0.0f, -3.0f, 2.0f),
                                                  glm::vec3(0.0f, 0.0f, 0.0f),
-                                                 glm::vec3(0.0f, 1.0f, 0.0f));
+                                                 glm::vec3(0.0f, 1.0f, 1.0f));
 
     shader->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
 
@@ -338,7 +340,12 @@ unsigned AssignementApplication::Run() {
             updateSelectedCube();
             hasCubeSelected = false;
         }
-
+        if(hasCameraChanged) {
+            shader->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
+            shader->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+            shader->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
+            hasCameraChanged = false;
+        }
         for(auto cube : cubes) {
             if(cube!=nullptr)
                 RenderCommands::DrawIndex(
