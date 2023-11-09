@@ -1,6 +1,6 @@
 #include <string>
-#ifndef PROG2002_SHADER_H
-#define PROG2002_SHADER_H
+#ifndef PROG2002_SHADERLAB2_H
+#define PROG2002_SHADERLAB2_H
 
 // Vertex and fragment shader source code
 const std::string vertexShaderSrc = R"(
@@ -26,4 +26,4 @@ const std::string fragmentShaderSrc = R"(
 )";
 
 
-#endif //PROG2002_SHADER_H
+#endif //PROG2002_SHADERLAB2_H

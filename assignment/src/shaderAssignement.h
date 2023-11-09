@@ -29,4 +29,4 @@ const std::string fragmentShaderSrc = R"(
 )";
 
 
-#endif //PROG2002_SHADER_H
+#endif //PROG2002_SHADERASSIGNEMENT_H
