@@ -33,8 +33,6 @@ public:
     explicit Lab4Application(const std::string& name = "Lab4", const std::string& version = "0.0.1",
         unsigned int width = 800, unsigned int height = 800);
     ~Lab4Application();
-    // Load texture using the STB Image library and bind it to the specified texture slot.
-    GLuint LoadTexture(const std::string& filepath, GLuint slot);
     unsigned Run();
     unsigned stop();
     void move(Direction direction);

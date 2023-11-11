@@ -129,7 +129,7 @@ std::vector<float> Lab4Application::createSelectionSquare() const {
 }
 
 std::vector<float> Lab4Application::createSelectionCube() const {
-    std::vector<float> selectionSquare = {
+    std::vector<float> selectionCube = {
             1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.1, 0, 0,
             1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.1, 0, 0,
             1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.1, 0, 0,
@@ -139,7 +139,7 @@ std::vector<float> Lab4Application::createSelectionCube() const {
             1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  2.0f / (float)numberOfSquare, 0, 0,
             1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 2.0f / (float)numberOfSquare, 0, 0
     };
-    return selectionSquare;
+    return selectionCube;
 }
 
 unsigned Lab4Application::Run() {
@@ -150,9 +150,9 @@ unsigned Lab4Application::Run() {
     auto grid = GeometricTools::UnitGridGeometry2DWTCoords(numberOfSquare);
     auto indices = GeometricTools::UnitGrid2DTopologyLab4(numberOfSquare); 
 
-    auto selectionSquare = createSelectionSquare();
+    auto selectionCube = createSelectionCube();
 
-    grid.insert(grid.end(), selectionSquare.begin(), selectionSquare.end());
+    grid.insert(grid.end(), selectionCube.begin(), selectionCube.end());
 
     //std::cout << triangle.size() << " " << triangle.size() / 7 << std::endl;
     auto vertexArray = std::make_shared<VertexArray>();
@@ -160,10 +160,15 @@ unsigned Lab4Application::Run() {
     auto indicesSelectionSquare = GeometricTools::TopologySquare2D;
 
     for (unsigned i : indicesSelectionSquare) {
-        indices.push_back((numberOfSquare + 1) * (numberOfSquare + 1) * 2 + i);
+        unsigned index = (numberOfSquare + 1) * (numberOfSquare + 1) * 2 + i;
+        // Ensure the index is within the bounds of selectionSquare
+        index = std::min(index, static_cast<unsigned>(selectionCube.size() - 1));
+        indices.push_back(index);
     }
 
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
+
+
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), static_cast<GLsizei>(indices.size()));
     auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false},
         {ShaderDataType::Float2, "texCoords", false}
@@ -177,7 +182,7 @@ unsigned Lab4Application::Run() {
 
     auto indicesCube = GeometricTools::CubeTopology;
 
-    auto indexBufferCube = std::make_shared<IndexBuffer>(indicesCube.data(), indicesCube.size());
+    auto indexBufferCube = std::make_shared<IndexBuffer>(indicesCube.data(), static_cast<GLsizei>(indicesCube.size()));
 
     auto vertexBufferCube = std::make_shared<VertexBuffer>(cube.data(), sizeof(float) * cube.size());
 
@@ -261,11 +266,9 @@ unsigned Lab4Application::Run() {
             vertexArray
         );
         if (hasMoved) {
-            selectionSquare = createSelectionCube();
+            selectionCube = createSelectionCube();
             //Update vertexbufferCube with the content of createSelectionCube
-            vertexBufferCube->BufferSubData(0,
-                sizeof(float) * 5 * 8, selectionSquare.data());
-
+            vertexBufferCube->BufferSubData(0, sizeof(float) * selectionCube.size(), selectionCube.data());
 
             hasMoved = false;
             hasRotated = true;
@@ -277,10 +280,10 @@ unsigned Lab4Application::Run() {
             // Get the gravity center of the cube
             float gravityPoint[3] = { 0.0f, 0.0f, 0.0f };
 
-            for (int i = 0; i < selectionSquare.size(); i += 5) {
-                gravityPoint[0] += selectionSquare[i];
-                gravityPoint[1] += selectionSquare[i + 1];
-                gravityPoint[2] += selectionSquare[i + 2];
+            for (int i = 0; i < selectionCube.size(); i += 5) {
+                gravityPoint[0] += selectionCube[i];
+                gravityPoint[1] += selectionCube[i + 1];
+                gravityPoint[2] += selectionCube[i + 2];
             }
 
             gravityPoint[0] /= 8;
@@ -289,19 +292,19 @@ unsigned Lab4Application::Run() {
 
             //To rotate the cube around its center, we need to translate the cube to the origin, rotate it and translate it back to its original position
 
-            selectionSquare = GeometricTools::translateCube(selectionSquare, -gravityPoint[0], -gravityPoint[1], -gravityPoint[2]);
+            selectionCube = GeometricTools::translateCubeWTCoord(selectionCube, -gravityPoint[0], -gravityPoint[1], -gravityPoint[2]);
 
             //Rotate the cube
 
-            selectionSquare = GeometricTools::rotateCube(selectionSquare, rotationAngleX - currentRotationAngleX, rotationAngleY - currentRotationAngleY, 0);
+            selectionCube = GeometricTools::rotateCubeWTCoord(selectionCube, rotationAngleX - currentRotationAngleX, rotationAngleY - currentRotationAngleY, 0);
 
             //Translate the cube back to its original position
 
-            selectionSquare = GeometricTools::translateCube(selectionSquare, gravityPoint[0], gravityPoint[1], gravityPoint[2]);
+            selectionCube = GeometricTools::translateCubeWTCoord(selectionCube, gravityPoint[0], gravityPoint[1], gravityPoint[2]);
 
             //Update vertexbufferCube with the content of new_cube
             vertexBufferCube->BufferSubData(0,
-                sizeof(float) * 5 * 8, selectionSquare.data());
+                sizeof(float) * 5 * 8, selectionCube.data());
 
             currentRotationAngleX = rotationAngleX;
             currentRotationAngleY = rotationAngleY;

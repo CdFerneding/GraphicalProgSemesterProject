@@ -228,6 +228,8 @@ namespace GeometricTools {
             0, 1, 5,
             5, 4, 0
     };
+
+    /* rotating a cube that has 7 attributes (3 of which being positions) */
     auto rotateCube(std::vector<float> cube, float angleX, float rotationAngleY, float rotationAngleZ) {
 
         std::vector<float> newCube;
@@ -249,9 +251,31 @@ namespace GeometricTools {
         }
 
         return newCube;
-
     }
 
+    /* rotate a cube that has 5 attributes (3 of which being x,y and z positions) */
+    auto rotateCubeWTCoord(std::vector<float> cube, float angleX, float rotationAngleY, float rotationAngleZ) {
+
+        std::vector<float> newCube;
+
+        glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(angleX), glm::vec3(1.0f, 0.0f, 0.0f));
+        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotationAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
+        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotationAngleZ), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        for (int i = 0; i < cube.size(); i += 5) {
+            glm::vec4 vertex = glm::vec4(cube[i], cube[i + 1], cube[i + 2], 1.0f);
+            vertex = rotationMatrix * vertex;
+            newCube.push_back(vertex.x);
+            newCube.push_back(vertex.y);
+            newCube.push_back(vertex.z);
+            newCube.push_back(cube[i + 3]);
+            newCube.push_back(cube[i + 4]);
+        }
+
+        return newCube;
+    }
+
+    /* translate a cube that has 7 attributes (3 of which being positions) */
     std::vector<float> translateCube(std::vector<float> cube, float x, float y, float z) {
         glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
         std::vector<float> newCube;
@@ -265,6 +289,22 @@ namespace GeometricTools {
             newCube.push_back(cube[i+4]);
             newCube.push_back(cube[i+5]);
             newCube.push_back(cube[i+6]);
+        }
+        return newCube;
+    }
+
+    /* translate a cube that has 5 attributes (3 of which being x,y and z positions) */
+    std::vector<float> translateCubeWTCoord(std::vector<float> cube, float x, float y, float z) {
+        glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+        std::vector<float> newCube;
+        for (int i = 0; i < cube.size(); i += 5) {
+            glm::vec4 vertex = glm::vec4(cube[i], cube[i + 1], cube[i + 2], 1.0f);
+            vertex = translationMatrix * vertex;
+            newCube.push_back(vertex.x);
+            newCube.push_back(vertex.y);
+            newCube.push_back(vertex.z);
+            newCube.push_back(cube[i + 3]);
+            newCube.push_back(cube[i + 4]);
         }
         return newCube;
     }
