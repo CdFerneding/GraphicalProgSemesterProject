@@ -134,14 +134,14 @@ std::vector<float> Lab4Application::createSelectionCube() const {
     float YSelected = static_cast<float>(currentYSelected);
 
     std::vector<float> selectionCube = {
-        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, 0.1, 1, 1,
-        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), 0.1, 1, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), 0.1, 1, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, 0.1, 1, 1,
-        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, cubeSize, 1, 1,
-        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), cubeSize, 1, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), cubeSize, 1, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, cubeSize, 1, 1,
+        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1, 1, 1,
+        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1, 1, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1, 1, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1, 1, 1,
+        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1, 1, 1,
+        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1, 1, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1, 1, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1, 1, 1,
     };
     return selectionCube;
 }
@@ -153,7 +153,7 @@ unsigned Lab4Application::Run() {
     hasMoved = false;
 
     auto grid = GeometricTools::UnitGridGeometry2DWTCoords(numberOfSquare);
-    auto indices = GeometricTools::UnitGrid2DTopologyLab4(numberOfSquare); 
+    auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
 
     auto selectionCube = createSelectionCube();
 
@@ -176,6 +176,7 @@ unsigned Lab4Application::Run() {
     auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), static_cast<GLsizei>(indices.size()));
     auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false},
+        {ShaderDataType::Float4, "color", false},
         {ShaderDataType::Float2, "texCoords", false}
         }));
 
@@ -254,11 +255,11 @@ unsigned Lab4Application::Run() {
     GLuint textureUnitFloor = textureManager->GetUnitByName("white-marmor"); */
 
     // Load Cube Map
-    bool successCube = textureManager->LoadCubeMapRGBA("black-marmor", "resources/textures/black-tile.jpg", 0, true);
+    bool successCube = textureManager->LoadCubeMapRGBA("texture1", "resources/textures/black-tile.jpg", 0, true);
     if (!successCube) {
         std::cout << "Cube Map not loaded correctly." << std::endl;
     }
-    GLuint textureUnitCube = textureManager->GetUnitByName("black-marmor");
+    GLuint textureUnitCube = textureManager->GetUnitByName("texture1");
     shader->UploadUniform1i("CubeMap", textureUnitCube); // black 
 
     // Give the textures to the shader
@@ -266,9 +267,14 @@ unsigned Lab4Application::Run() {
     
     glfwSetKeyCallback(window, Lab4Application::key_callback);
 
+    // Enable blending
+    glEnable(GL_BLEND);
+    // Set the blending function: s*alpha + d(1-alpha)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
     //Wireframe mode
@@ -301,7 +307,7 @@ unsigned Lab4Application::Run() {
             // Get the gravity center of the cube
             float gravityPoint[3] = { 0.0f, 0.0f, 0.0f };
 
-            for (int i = 0; i < selectionCube.size(); i += 5) {
+            for (int i = 0; i < selectionCube.size(); i += numOfAttributes) {
                 gravityPoint[0] += selectionCube[i];
                 gravityPoint[1] += selectionCube[i + 1];
                 gravityPoint[2] += selectionCube[i + 2];

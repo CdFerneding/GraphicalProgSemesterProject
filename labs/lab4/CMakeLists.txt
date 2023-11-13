@@ -41,11 +41,6 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC TEXTURES_DIR="${CMAKE_RUNTIME_
 
 # Custom command to copy the 'cat.png' texture to the expected build directory after the build
 # This ensures that the texture is available at runtime, regardless of where the executable is invoked from
-add_custom_command(
-  TARGET ${PROJECT_NAME} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/textures/black-tile.jpg
-  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures/black-tile.jpg)
 
 # Custom command to copy all files from the 'textures' directory
 add_custom_command(

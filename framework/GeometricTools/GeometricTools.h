@@ -33,26 +33,47 @@ namespace GeometricTools {
     // The shape of the generated data is PPTTPPTTPPTT..., meaning two components for position
     // and two components for texture coordinates.
     auto UnitGridGeometry2DWTCoords(const unsigned int divisions) {
-        //Create a std vector of float with size of 3*divisions*divisions
         std::vector<float> vertices;
+        int count = 0;
         for (int i = 0; i <= divisions; ++i) {
             float xPos = (i / static_cast<float>(divisions)) * 2 - 1.0f;
             for (int j = 0; j <= divisions; ++j) {
                 float yPos = (j / static_cast<float>(divisions)) * 2 - 1.0f;
                 vertices.push_back(xPos);
                 vertices.push_back(yPos);
-                vertices.push_back(0.0f); // Set z-coordinate to 0 for a 3D grid
-
-                // Calculate and add texture coordinates
-                // these coordinates take the the edges to the area to know where to apply the texture (in our case the chessboard floor)
-                // explanation: opengl starts the coordinate grid from the bottom left with 0,0
-                // bottom left:
-
+                vertices.push_back(0.0f); // Set z-coordinate to 0 for a 2D grid
+                //put the color in rgba format
+                vertices.push_back(1.0);
+                vertices.push_back(1.0);
+                vertices.push_back(1.0);
+                vertices.push_back(1.0);
+                // texCoords
                 vertices.push_back((xPos + 1) / 2);
                 vertices.push_back((yPos + 1) / 2);
+                count++;
+                //std::cout << xPos << ", " << yPos << ", 1.0, 1.0, 1.0, 1.0, 1.0" << std::endl;
             }
         }
-
+        for (int i = 0; i <= divisions; ++i) {
+            float xPos = (i / static_cast<float>(divisions)) * 2 - 1.0f;
+            for (int j = 0; j <= divisions; ++j) {
+                float yPos = (j / static_cast<float>(divisions)) * 2 - 1.0f;
+                vertices.push_back(xPos);
+                vertices.push_back(yPos);
+                vertices.push_back(0.0f); // Set z-coordinate to 0 for a 2D grid
+                //put the color in rgba format
+                vertices.push_back(0.0);
+                vertices.push_back(0.0);
+                vertices.push_back(0.0);
+                vertices.push_back(1.0);
+                //texCoords
+                vertices.push_back((xPos + 1) / 2);
+                vertices.push_back((yPos + 1) / 2);
+                count++;
+                //std::cout << xPos << ", " << yPos << ", 1.0, 1.0, 1.0, 1.0, 1.0" << std::endl;
+            }
+        }
+        //convert grid to std array
         return vertices;
     }
 
