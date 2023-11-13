@@ -19,8 +19,9 @@ unsigned int GLFWApplication::Init() {
     // GLFW window hints
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_SAMPLES, 16 );
     // Create a GLFW window
-    window = glfwCreateWindow(800, 800, "Triangle", nullptr, nullptr);
+    window = glfwCreateWindow(800, 800, "OpenGL Application", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -36,10 +37,11 @@ unsigned int GLFWApplication::Init() {
         glfwTerminate();
         return EXIT_FAILURE;
     }
-    return EXIT_SUCCESS;
 
     // printing currently used openGL version
     std::cout << glGetString(GL_VERSION) << std::endl;
+
+    return EXIT_SUCCESS;
 }
 
 unsigned int GLFWApplication::stop() {

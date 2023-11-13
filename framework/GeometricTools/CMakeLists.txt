@@ -17,3 +17,6 @@ target_include_directories(GeometricTools INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 # stop processing. If found, this command sets up various variables
 # and imported targets related to OpenGL that can be used later.
 find_package(OpenGL REQUIRED)
+
+
+target_link_libraries(GeometricTools INTERFACE glm glfw glad OpenGL::GL stb)

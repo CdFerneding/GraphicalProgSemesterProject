@@ -1,4 +1,4 @@
-#include "Lab3Application.h"
+#include "Lab5Application.h"
 #include "shader.h"
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
@@ -12,9 +12,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <RenderCommands.h>
 
-Lab3Application* Lab3Application::current_application = nullptr;
+Lab5Application* Lab5Application::current_application = nullptr;
 
-Lab3Application::Lab3Application(const std::string& name, const std::string& version,
+Lab5Application::Lab5Application(const std::string& name, const std::string& version,
     unsigned int width, unsigned int height) : GLFWApplication(name, version, width, height) {
     currentXSelected = 0;
     currentYSelected = 0;
@@ -24,40 +24,40 @@ Lab3Application::Lab3Application(const std::string& name, const std::string& ver
     currentRotationAngleY = 0;
 }
 
-Lab3Application::~Lab3Application() {
+Lab5Application::~Lab5Application() {
 
 }
-void Lab3Application::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void Lab5Application::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     if (action == GLFW_PRESS) {
         switch (key) {
         case GLFW_KEY_UP:
-            getLab3Application()->move(UP);
+            getLab5Application()->move(UP);
             break;
         case GLFW_KEY_DOWN:
-            getLab3Application()->move(DOWN);
+            getLab5Application()->move(DOWN);
             break;
         case GLFW_KEY_LEFT:
-            getLab3Application()->move(LEFT);
+            getLab5Application()->move(LEFT);
             break;
         case GLFW_KEY_RIGHT:
-            getLab3Application()->move(RIGHT);
+            getLab5Application()->move(RIGHT);
             break;
 
         // There is two key for up and left because we are using a QWERTY and an AZERTY keyboard
         case GLFW_KEY_Z:
         case GLFW_KEY_W:
-		    getLab3Application()->rotateCube(UP);
+		    getLab5Application()->rotateCube(UP);
 		    break;
         case GLFW_KEY_A:
         case GLFW_KEY_Q:
-            getLab3Application()->rotateCube(LEFT);
+            getLab5Application()->rotateCube(LEFT);
             break;
         case GLFW_KEY_S:
-            getLab3Application()->rotateCube(DOWN);
+            getLab5Application()->rotateCube(DOWN);
             break;
         case GLFW_KEY_D:
-            getLab3Application()->rotateCube(RIGHT);
+            getLab5Application()->rotateCube(RIGHT);
             break;
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -67,7 +67,7 @@ void Lab3Application::key_callback(GLFWwindow* window, int key, int scancode, in
         }
     }
 }
-void Lab3Application::move(Direction direction) {
+void Lab5Application::move(Direction direction) {
     hasMoved = true;
     switch (direction) {
     case UP:
@@ -90,7 +90,7 @@ void Lab3Application::move(Direction direction) {
     //std::cout << "Current Y: " << currentYSelected << std::endl;
 }
 
-void Lab3Application::rotateCube(Direction direction) {
+void Lab5Application::rotateCube(Direction direction) {
     hasRotated = true;
     switch (direction) {
         case UP:
@@ -110,7 +110,7 @@ void Lab3Application::rotateCube(Direction direction) {
     }
 }
 
-std::vector<float> Lab3Application::createSelectionSquare() const {
+std::vector<float> Lab5Application::createSelectionSquare() const {
 
     std::vector<float> selectionSquare = {
             1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 1, 0, 0, 1,
@@ -127,7 +127,7 @@ std::vector<float> Lab3Application::createSelectionSquare() const {
     return selectionSquare;
 }
 
-std::vector<float> Lab3Application::createSelectionCube() const {
+std::vector<float> Lab5Application::createSelectionCube() const {
     std::vector<float> selectionSquare = {
             1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.1, 1, 0, 0, 1,
             1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.1, 1, 0, 0, 1,
@@ -141,7 +141,7 @@ std::vector<float> Lab3Application::createSelectionCube() const {
     return selectionSquare;
 }
 
-unsigned Lab3Application::Run() {
+unsigned Lab5Application::Run() {
     current_application = this;
     hasRotated = false;
     hasMoved = false;
@@ -222,8 +222,9 @@ unsigned Lab3Application::Run() {
 
     glm::vec4 color = glm::vec4(0.0, 0.0, 0.0, 1.0);
     shader->UploadUniformFloat4("u_Color", color);
+    shader->UploadUniformFloat1("u_ambientStrength", 0.75);
 
-    glfwSetKeyCallback(window, Lab3Application::key_callback);
+    glfwSetKeyCallback(window, Lab5Application::key_callback);
 
     glEnable(GL_MULTISAMPLE);  // Enabled Multisample
     glEnable(GL_DEPTH_TEST);
@@ -232,13 +233,36 @@ unsigned Lab3Application::Run() {
     glBlendEquation(GL_FUNC_ADD);
     //Wireframe mode
     //RenderCommands::SetWireframeMode();
-
+    double seconds = 0.1f;
+    float current_ambiance_light = 1.0f;
     while (!glfwWindowShouldClose(window))
     {
-
-        //preparation of Window and Shader
-        RenderCommands::SetClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
         RenderCommands::Clear();
+
+        if(current_ambiance_light<=1.0f) {
+            RenderCommands::SetClearColor(0.663f*current_ambiance_light, 0.663f*current_ambiance_light, 0.663f*current_ambiance_light, 1); // Set clear color to a shade of gray
+        }
+        else {
+            float multiplier = -current_ambiance_light + 2.0f;
+            RenderCommands::SetClearColor(0.663f*multiplier, 0.663f*multiplier, 0.663f*multiplier,
+                                          -current_ambiance_light + 2.0f); // Set clear color to a shade of gray
+        }
+        //For every seconds print the "hello world"
+        if (glfwGetTime() > seconds) {
+            seconds+=0.01;
+            current_ambiance_light+=0.005f;
+
+            if(current_ambiance_light >= 2.0f)
+                current_ambiance_light = 0.0f;
+
+            if(current_ambiance_light<=1.0f) {
+                shader->UploadUniformFloat1("u_ambientStrength", current_ambiance_light);
+            }
+            else {
+                shader->UploadUniformFloat1("u_ambientStrength", -current_ambiance_light + 2.0f);
+            }
+        }
+        //preparation of Window and Shader
 
         shader->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
 
@@ -317,7 +341,7 @@ unsigned Lab3Application::Run() {
     return stop();
 }
 
-unsigned Lab3Application::stop() {
+unsigned Lab5Application::stop() {
     unsigned code = GLFWApplication::stop();
     if (GLFWApplication::stop() != EXIT_SUCCESS) {
         //print error message
@@ -329,6 +353,6 @@ unsigned Lab3Application::stop() {
     return code;
 }
 
-Lab3Application* Lab3Application::getLab3Application() {
-    return Lab3Application::current_application;
+Lab5Application* Lab5Application::getLab5Application() {
+    return Lab5Application::current_application;
 }

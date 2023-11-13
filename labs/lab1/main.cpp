@@ -91,7 +91,7 @@ int draw_triangle()
         layout(location = 0) in vec3 position; // location: index of the buffer in which the vertexes are we want to use
         void main()
         {
-            gl_Position = vec4(position, 0.0, 1.0);
+            gl_Position = vec4(position, 1.0);
         }
     )";
 
@@ -120,12 +120,32 @@ int draw_triangle()
     const GLchar* vss = vertexShaderSrc.c_str();
     glShaderSource(vertexShader, 1, &vss, nullptr);
     glCompileShader(vertexShader);
+    // if shader compilation failed
+    auto error = glGetError();
+    if(error) {
+        //print error
+        char infoLog[512];
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cerr << "Compilation vertexShader failed: " << infoLog << std::endl;
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
 
     // Compile the fragment shader
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     const GLchar* fss = fragmentShaderSrc.c_str();
     glShaderSource(fragmentShader, 1, &fss, nullptr);
     glCompileShader(fragmentShader);
+    // if shader compilation failed
+    error = glGetError();
+    if(error) {
+        //print error
+        char infoLog[512];
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cerr << "Compilation fragment shader failed: " << infoLog << std::endl;
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
 
     // Create a shader program
     GLuint shaderProgram = glCreateProgram();
@@ -137,20 +157,21 @@ int draw_triangle()
     GLint success;
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
-        char infoLog[512];
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cerr << "Shader program linking failed: " << infoLog << std::endl;
-        glfwTerminate();
-        return EXIT_FAILURE;
-    }
+        GLint logSize;
+        glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &logSize);
+        std::vector<GLchar> infoLog(logSize);
+        glGetProgramInfoLog(shaderProgram, logSize, NULL, infoLog.data());
 
-    // Clean up shader objects
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+        std::cerr << "Shader program linking failed: " << infoLog.data() << std::endl;
+
+    }else {
+        // Clean up shader objects
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+    }
 
     // Use the shader program
     glUseProgram(shaderProgram);
-
     while (!glfwWindowShouldClose(window))
     {
         // Clear the screen

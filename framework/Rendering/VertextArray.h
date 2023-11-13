@@ -27,6 +27,10 @@ public:
     // Get the index buffer
     const std::shared_ptr<IndexBuffer> &GetIndexBuffer() const { return IdxBuffer; }
 
+    const std::shared_ptr<VertexBuffer> &getVertexBuffer(unsigned int idx) const { return VertexBuffers[idx]; }
+
+    const unsigned int getNumberOfVertexBuffers() const { return VertexBuffers.size(); }
+
 private:
     GLuint m_vertexArrayID;
     std::vector<std::shared_ptr<VertexBuffer>> VertexBuffers;

@@ -37,5 +37,6 @@ void VertexBuffer::BufferSubData(GLintptr offset, GLsizeiptr size, const void* d
     // replacement starts at "offset"-bytes into the array
     // replacement goes "size"-bytes far
     // this part will be replaced by data
+    Bind();
     glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
 }

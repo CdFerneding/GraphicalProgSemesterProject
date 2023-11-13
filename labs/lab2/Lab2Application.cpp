@@ -101,7 +101,7 @@ unsigned Lab2Application::Run() {
         indices.push_back((numberOfSquare+1) * (numberOfSquare+1) * 2 + i);
     }
 
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), indices.size());
+    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), static_cast<GLsizei>(indices.size())); 
     auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false}
         ,{ShaderDataType::Float4, "color", false} // When we use the color in the vertexBuffer

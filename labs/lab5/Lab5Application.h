@@ -1,5 +1,5 @@
-#ifndef PROG2002_LAB3APPLICATION_H
-#define PROG2002_LAB3APPLICATION_H
+#ifndef PROG2002_LAB5APPLICATION_H
+#define PROG2002_LAB5APPLICATION_H
 
 #include <string>
 #include <vector>
@@ -12,7 +12,7 @@ enum Direction {
     RIGHT
 };
 
-class Lab3Application : public GLFWApplication {
+class Lab5Application : public GLFWApplication {
 private:
     unsigned int currentXSelected;
     unsigned int currentYSelected;
@@ -23,24 +23,24 @@ private:
     float currentRotationAngleY;
 
     const unsigned int numberOfSquare = 8;
-    static Lab3Application* current_application;
+    static Lab5Application* current_application;
     bool hasMoved;
     bool hasRotated;
 
     std::vector<float> createSelectionSquare() const;
     std::vector<float> createSelectionCube() const;
 public:
-    explicit Lab3Application(const std::string& name = "Lab3", const std::string& version = "0.0.1",
+    explicit Lab5Application(const std::string& name = "Lab5", const std::string& version = "0.0.1",
         unsigned int width = 800, unsigned int height = 800);
-    ~Lab3Application();
+    ~Lab5Application();
     unsigned Run();
     unsigned stop();
     void move(Direction direction);
     void rotateCube(Direction direction);
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    static Lab3Application* getLab3Application();
+    static Lab5Application* getLab5Application();
 };
 
 
 
-#endif //PROG2002_LAB3APPLICATION_H
+#endif //PROG2002_LAB5APPLICATION_H
