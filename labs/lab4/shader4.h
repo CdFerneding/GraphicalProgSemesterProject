@@ -8,7 +8,7 @@ const std::string vertexShaderSrc = R"(
     layout(location = 0) in vec3 position;
     layout(location = 1) in vec2 texCoords;
 
-    out vec2 fragTexCoords;
+    out vec3 fragTexCoords;
 
     uniform mat4 u_Model;
     uniform mat4 u_View;
@@ -17,23 +17,23 @@ const std::string vertexShaderSrc = R"(
     void main()
     {
         gl_Position = u_Projection * u_View * u_Model * vec4(position, 1.0);
-        fragTexCoords = texCoords;
+        fragTexCoords = vec3(texCoords, 1.0);
     }
 )";
 
 const std::string fragmentShaderSrc = R"(
     #version 430 core
 
-    in vec2 fragTexCoords;
+    in vec3 fragTexCoords;
     
-    layout(binding=0) uniform sampler2D uTexture;
+    uniform samplerCube CubeMap;
 
     out vec4 color;
     
     void main()
     {
         // Sample the texture using the texture coordinates
-        vec4 texColor = texture(uTexture, fragTexCoords);
+        vec4 texColor = texture(CubeMap, fragTexCoords);
         color = texColor;
     }
 )";

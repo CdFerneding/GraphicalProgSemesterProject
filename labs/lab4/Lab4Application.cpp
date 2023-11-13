@@ -129,18 +129,23 @@ std::vector<float> Lab4Application::createSelectionSquare() const {
 }
 
 std::vector<float> Lab4Application::createSelectionCube() const {
+    float cubeSize = 2.0f / static_cast<float>(numberOfSquare);
+    float XSelected = static_cast<float>(currentXSelected);
+    float YSelected = static_cast<float>(currentYSelected);
+
     std::vector<float> selectionCube = {
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.1, 0, 0,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.1, 0, 0,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.1, 0, 0,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.1, 0, 0,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 2.0f / (float)numberOfSquare, 0, 0,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 2.0f / (float)numberOfSquare, 0, 0,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  2.0f / (float)numberOfSquare, 0, 0,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 2.0f / (float)numberOfSquare, 0, 0
+        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, 0.1, 1, 1,
+        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), 0.1, 1, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), 0.1, 1, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, 0.1, 1, 1,
+        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, cubeSize, 1, 1,
+        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), cubeSize, 1, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), cubeSize, 1, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, cubeSize, 1, 1,
     };
     return selectionCube;
 }
+
 
 unsigned Lab4Application::Run() {
     current_application = this;
@@ -173,6 +178,16 @@ unsigned Lab4Application::Run() {
         {ShaderDataType::Float3, "position", false},
         {ShaderDataType::Float2, "texCoords", false}
         }));
+
+
+    unsigned int numOfAttributes = 0;
+    for (int i = 0; i < gridBufferLayout->GetAttributes().size(); i++) {
+        // considering we are using Float: division by 4
+        // otherwise I think a switch case statement would be necessary 
+        auto attribute = gridBufferLayout->GetAttributes()[i];
+        numOfAttributes += attribute.Size / 4;
+        //std::cout << numOfAttributes << std::endl; 
+    }
 
     auto vertexBuffer = std::make_shared<VertexBuffer>(grid.data(), sizeof(float) * grid.size());
 
@@ -230,18 +245,24 @@ unsigned Lab4Application::Run() {
     // Texture module
     //
     TextureManager* textureManager = TextureManager::GetInstance(); 
-    bool success = textureManager->LoadTexture2DRGBA("black-marmor", "resources/textures/black-tile.jpg", 0, true);
-    if (!success) {
-        // Handle the case where the texture couldn't be loaded
-        // Error handling
-        std::cout << "Texture not loaded correctly." << std::endl;
+    
+    // Load 2D texture
+    /*bool success2D = textureManager->LoadTexture2DRGBA("white-marmor", "resources/textures/white-tile.jpg", 0, true);
+    if (!success2D) {
+        std::cout << "2D Texture not loaded correctly." << std::endl;
     }
+    GLuint textureUnitFloor = textureManager->GetUnitByName("white-marmor"); */
 
-    GLuint textureUnit = textureManager->GetUnitByName("black-marmor"); 
+    // Load Cube Map
+    bool successCube = textureManager->LoadCubeMapRGBA("black-marmor", "resources/textures/black-tile.jpg", 0, true);
+    if (!successCube) {
+        std::cout << "Cube Map not loaded correctly." << std::endl;
+    }
+    GLuint textureUnitCube = textureManager->GetUnitByName("black-marmor");
+    shader->UploadUniform1i("CubeMap", textureUnitCube); // black 
 
-    // Give the texture to the shader
-    shader->UploadUniform1i("uTexture", 0); 
-
+    // Give the textures to the shader
+    //shader->UploadUniform1i("uTexture", textureUnitCube); // white 
     
     glfwSetKeyCallback(window, Lab4Application::key_callback);
 
@@ -292,15 +313,15 @@ unsigned Lab4Application::Run() {
 
             //To rotate the cube around its center, we need to translate the cube to the origin, rotate it and translate it back to its original position
 
-            selectionCube = GeometricTools::translateCubeWTCoord(selectionCube, -gravityPoint[0], -gravityPoint[1], -gravityPoint[2]);
+            selectionCube = GeometricTools::translateCubeGeneric(selectionCube, -gravityPoint[0], -gravityPoint[1], -gravityPoint[2], numOfAttributes);
 
             //Rotate the cube
 
-            selectionCube = GeometricTools::rotateCubeWTCoord(selectionCube, rotationAngleX - currentRotationAngleX, rotationAngleY - currentRotationAngleY, 0);
+            selectionCube = GeometricTools::rotateCubeGeneric(selectionCube, rotationAngleX - currentRotationAngleX, rotationAngleY - currentRotationAngleY, 0, numOfAttributes);
 
             //Translate the cube back to its original position
 
-            selectionCube = GeometricTools::translateCubeWTCoord(selectionCube, gravityPoint[0], gravityPoint[1], gravityPoint[2]);
+            selectionCube = GeometricTools::translateCubeGeneric(selectionCube, gravityPoint[0], gravityPoint[1], gravityPoint[2], numOfAttributes);
 
             //Update vertexbufferCube with the content of new_cube
             vertexBufferCube->BufferSubData(0,

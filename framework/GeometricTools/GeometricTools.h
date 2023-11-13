@@ -29,15 +29,6 @@ namespace GeometricTools {
 
     constexpr std::array<unsigned int, 6> TopologySquare2D = {0, 1, 2, 0, 2, 3}; // [6]
 
-    //according to the issue this function will replace the old UnitGrid2d from now on, but I will keep the ald function
-
-    // Function version of the above
-    std::vector<float> UnitGridGeometry2DWTCoords(unsigned int X, unsigned int Y)
-    {
-        // Implementation is up to you
-        return {0.0f};
-    }
-
     // Constexpr version that generates the geometry of the grid, including texture coordinates
     // The shape of the generated data is PPTTPPTTPPTT..., meaning two components for position
     // and two components for texture coordinates.
@@ -56,7 +47,7 @@ namespace GeometricTools {
                 // these coordinates take the the edges to the area to know where to apply the texture (in our case the chessboard floor)
                 // explanation: opengl starts the coordinate grid from the bottom left with 0,0
                 // bottom left:
-                
+
                 vertices.push_back((xPos + 1) / 2);
                 vertices.push_back((yPos + 1) / 2);
             }
@@ -253,8 +244,8 @@ namespace GeometricTools {
         return newCube;
     }
 
-    /* rotate a cube that has 5 attributes (3 of which being x,y and z positions) */
-    auto rotateCubeWTCoord(std::vector<float> cube, float angleX, float rotationAngleY, float rotationAngleZ) {
+    /* rotate a cube (number of attributes not hardcoded) */
+    auto rotateCubeGeneric(std::vector<float> cube, float angleX, float rotationAngleY, float rotationAngleZ, unsigned int numberOfAttributes) {
 
         std::vector<float> newCube;
 
@@ -262,14 +253,17 @@ namespace GeometricTools {
         rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotationAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
         rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotationAngleZ), glm::vec3(0.0f, 0.0f, 1.0f));
 
-        for (int i = 0; i < cube.size(); i += 5) {
+        for (int i = 0; i < cube.size(); i += numberOfAttributes) {
             glm::vec4 vertex = glm::vec4(cube[i], cube[i + 1], cube[i + 2], 1.0f);
             vertex = rotationMatrix * vertex;
-            newCube.push_back(vertex.x);
-            newCube.push_back(vertex.y);
-            newCube.push_back(vertex.z);
-            newCube.push_back(cube[i + 3]);
-            newCube.push_back(cube[i + 4]);
+            newCube.push_back(vertex.x); // attribute position 0
+            newCube.push_back(vertex.y); // attribute position 1
+            newCube.push_back(vertex.z); // attribute position 2
+            unsigned int attributePosition = 3;
+            while (attributePosition < numberOfAttributes) {
+                newCube.push_back(cube[i + attributePosition]);
+                attributePosition += 1;
+            }
         }
 
         return newCube;
@@ -293,18 +287,21 @@ namespace GeometricTools {
         return newCube;
     }
 
-    /* translate a cube that has 5 attributes (3 of which being x,y and z positions) */
-    std::vector<float> translateCubeWTCoord(std::vector<float> cube, float x, float y, float z) {
+    /* translate a cube (number of attributes not hardcoded) */
+    std::vector<float> translateCubeGeneric(std::vector<float> cube, float x, float y, float z, unsigned int numberOfAttributes) {
         glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
         std::vector<float> newCube;
-        for (int i = 0; i < cube.size(); i += 5) {
+        for (int i = 0; i < cube.size(); i += numberOfAttributes) {
             glm::vec4 vertex = glm::vec4(cube[i], cube[i + 1], cube[i + 2], 1.0f);
             vertex = translationMatrix * vertex;
             newCube.push_back(vertex.x);
             newCube.push_back(vertex.y);
             newCube.push_back(vertex.z);
-            newCube.push_back(cube[i + 3]);
-            newCube.push_back(cube[i + 4]);
+            unsigned int attributePosition = 3;
+            while (attributePosition < numberOfAttributes) { 
+                newCube.push_back(cube[i + attributePosition]); 
+                attributePosition += 1; 
+            }
         }
         return newCube;
     }
