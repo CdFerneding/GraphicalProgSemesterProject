@@ -19,10 +19,6 @@ AssignementApplication::AssignementApplication(const std::string& name, const st
     unsigned int width, unsigned int height) : GLFWApplication(name, version, width, height) {
     currentXSelected = 0;
     currentYSelected = 0;
-    rotationAngleX = 0;
-    rotationAngleY = 0;
-    currentRotationAngleX = 0;
-    currentRotationAngleY = 0;
     //fill vertexArrayIdPerCoordinate with -1
     for(int i=0; i < numberOfSquare; i++) {
         for(int j=0; j < numberOfSquare; j++) {
@@ -134,7 +130,15 @@ void AssignementApplication::updateSelectedCube() {
     std::array<int, 2> new_coordinate = {static_cast<int>(currentXSelected), static_cast<int>(currentYSelected)};
     if (currentCubeSelected != -1) {
         bool colorSelectedCube = colorVertexArrays[vertexArrayIdPerCoordinate[previousPosition[0]][previousPosition[1]]];
-        if (isNotEmpty) {
+        if(new_coordinate[0] == previousPosition[0] && new_coordinate[1] == previousPosition[1]) {
+            new_coordinate = previousPosition;
+            auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(currentSelectedVertexArray->getNumberOfVertexBuffers() - 1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
+            auto cube = createSelectionCube(0, 1, 0, new_coordinate[0], new_coordinate[1]);
+            vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
+            float opacity = vertexArrayIdPerCoordinate[currentXSelected][currentYSelected] == -1 ? 1 : 0;
+            vertexBufferSelectionSquare->BufferSubData(0, sizeof(float) * selectionSquare.size(), createSelectionSquare(opacity).data());
+        }
+        else if (isNotEmpty) {
             new_coordinate = previousPosition;
             auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(currentSelectedVertexArray->getNumberOfVertexBuffers() - 1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
             auto cube = createSelectionCube(colorSelectedCube ? 0 : 1, 0.0f, colorSelectedCube ? 1 : 0, new_coordinate[0], new_coordinate[1]);
@@ -143,11 +147,15 @@ void AssignementApplication::updateSelectedCube() {
             auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(
                     currentSelectedVertexArray->getNumberOfVertexBuffers() -
                     1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
-            auto cube = createSelectionCube(colorSelectedCube ? 0 : 1, 0.0f, colorSelectedCube ? 1 : 0,
+            auto cube = createSelectionCube(0.0f, 1.0f, 0.0f,
                                             new_coordinate[0], new_coordinate[1]);
             vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
+
             vertexArrayIdPerCoordinate[new_coordinate[0]][new_coordinate[1]] = vertexArrayIdPerCoordinate[previousPosition[0]][previousPosition[1]];
             vertexArrayIdPerCoordinate[previousPosition[0]][previousPosition[1]] = -1;
+            cubeJustPlaced = true;
+            float opacity = vertexArrayIdPerCoordinate[currentXSelected][currentYSelected] == -1 ? 1 : 0;
+            vertexBufferSelectionSquare->BufferSubData(0, sizeof(float) * selectionSquare.size(), createSelectionSquare(opacity).data());
         }
         previousPosition = {static_cast<int>(-1), static_cast<int>(-1)};
         currentCubeSelected = -1;
@@ -157,21 +165,22 @@ void AssignementApplication::updateSelectedCube() {
             auto current_cube = vertexArrays[vertexArrayIdPerCoordinate[currentXSelected][currentYSelected]];
             currentCubeSelected = currentXSelected * numberOfSquare + currentYSelected;
             auto vertexBuffer = current_cube->getVertexBuffer(current_cube->getNumberOfVertexBuffers() - 1); // In case we plan to use multiple vertexBuffer, we need to make sure the one with the coordinate and color is in the last position
-            auto cube = createSelectionCube(0.0f, 1.0f, 0.0f, currentXSelected, currentYSelected);
+            auto cube = createSelectionCube(1.0f, 1.0f, 0.0f, currentXSelected, currentYSelected);
             vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
             currentSelectedVertexArray = current_cube;
             previousPosition = new_coordinate;
+            hasJustSelected = true;
         }
     }
 }
 
-std::vector<float> AssignementApplication::createSelectionSquare() const {
+std::vector<float> AssignementApplication::createSelectionSquare(float opacity) const {
 
     std::vector<float> selectionSquare = {
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0001, 0, 1, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.0001, 0, 1, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.0001, 0, 1, 0, 1,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0001, 0, 1, 0, 1
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0001, 0, 1, 0, opacity,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.0001, 0, 1, 0, opacity,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.0001, 0, 1, 0, opacity,
+            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0001, 0, 1, 0, opacity
     };
 
     //print the selection square
@@ -204,7 +213,7 @@ unsigned AssignementApplication::Run() {
 
     auto triangle = GeometricTools::UnitGrid2DWithColor(numberOfSquare); //code with the color not in the shader
 
-    auto selectionSquare = createSelectionSquare();
+    selectionSquare = createSelectionSquare(0);
 
     auto vertexArray = std::make_shared<VertexArray>();
     auto indices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
@@ -224,7 +233,7 @@ unsigned AssignementApplication::Run() {
             {0.0f, 0.0f, 1.0f} //blue
     };
 
-    auto vertexBufferSelectionSquare = std::make_shared<VertexBuffer>(selectionSquare.data(),
+    vertexBufferSelectionSquare = std::make_shared<VertexBuffer>(selectionSquare.data(),
                                                                       sizeof(float) * selectionSquare.size());
 
     auto vertexArraySelectionSquare = std::make_shared<VertexArray>();
@@ -245,7 +254,13 @@ unsigned AssignementApplication::Run() {
         unsigned x_coordinate = color[2]==1 ? numberOfSquare - 1 : 0;
         unsigned y_coordinate = 0;
         for (int i = 0; i < numberOfSquare * 2; i++) {
-            auto cube = createSelectionCube(color[0], color[1], color[2], x_coordinate, y_coordinate);
+            //Fix when you launch the program so the selected cube is green
+            std::vector<float> cube;
+            if(color[0] == arrayColor[0][0] && i == 0) {
+                cube = createSelectionCube(0, 1, 0, x_coordinate, y_coordinate);
+            }else {
+                cube = createSelectionCube(color[0], color[1], color[2], x_coordinate, y_coordinate);
+            }
             auto vertexArrayCube = std::make_shared<VertexArray>();
 
             auto indicesCube = GeometricTools::CubeTopology;
@@ -333,7 +348,28 @@ unsigned AssignementApplication::Run() {
             vertexArray
         );
         if (hasMoved) {
-            vertexBufferSelectionSquare->BufferSubData(0, sizeof(float) * selectionSquare.size(), createSelectionSquare().data());
+            float opacity = vertexArrayIdPerCoordinate[currentXSelected][currentYSelected] == -1 ? 1 : 0;
+            vertexBufferSelectionSquare->BufferSubData(0, sizeof(float) * selectionSquare.size(), createSelectionSquare(opacity).data());
+
+            if(opacity == 0 && !(previousPosition[0] == currentXSelected && previousPosition[1] == currentYSelected)) {
+                //Update the current cube and change his color to green
+                auto current_cube = vertexArrays[vertexArrayIdPerCoordinate[currentXSelected][currentYSelected]];
+                auto vertexBufferSelected = current_cube->getVertexBuffer(0);
+                auto cube = createSelectionCube(0.0f, 1.0f, 0.0f, currentXSelected, currentYSelected);
+                vertexBufferSelected->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
+
+            }
+            if(vertexArrayIdPerCoordinate[previousPositionSelector[0]][previousPositionSelector[1]] != -1 && !(previousPositionSelector[0] == previousPosition[0] && previousPosition[1] == previousPositionSelector[1])) {
+
+                auto previous_cube = vertexArrays[vertexArrayIdPerCoordinate[previousPositionSelector[0]][previousPositionSelector[1]]];
+                auto vertexBufferSelected = previous_cube->getVertexBuffer(0);
+                float r = colorVertexArrays[vertexArrayIdPerCoordinate[previousPositionSelector[0]][previousPositionSelector[1]]] ? 0 : 1;
+                float b = colorVertexArrays[vertexArrayIdPerCoordinate[previousPositionSelector[0]][previousPositionSelector[1]]] ? 1 : 0;
+                auto cube = createSelectionCube(r, 0.0f, b, previousPositionSelector[0], previousPositionSelector[1]);
+                vertexBufferSelected->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
+            }
+            previousPositionSelector[0] = currentXSelected;
+            previousPositionSelector[1] = currentYSelected;
             hasMoved = false;
         }
         if(hasCubeSelected) {
