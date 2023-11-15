@@ -288,7 +288,7 @@ unsigned Lab4Application::Run() {
         );
         if (hasMoved) {
             selectionCube = createSelectionCube();
-            //Update vertexbufferCube with the content of createSelectionCube
+            //Update vertexbufferCube with the content of createCube
             vertexBufferCube->BufferSubData(0, sizeof(float) * selectionCube.size(), selectionCube.data());
 
             hasMoved = false;

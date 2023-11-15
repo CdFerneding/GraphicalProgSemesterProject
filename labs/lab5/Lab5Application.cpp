@@ -274,7 +274,7 @@ unsigned Lab5Application::Run() {
         );
         if (hasMoved) {
             selectionSquare = createSelectionCube();
-            //Update vertexbufferCube with the content of createSelectionCube
+            //Update vertexbufferCube with the content of createCube
             vertexBufferCube->BufferSubData(0,
                 				sizeof(float) * 7 * 8, selectionSquare.data());
 
