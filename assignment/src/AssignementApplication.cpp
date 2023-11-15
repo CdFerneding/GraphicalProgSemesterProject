@@ -54,19 +54,19 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
         // There is two key for up and left because we are using a QWERTY and an AZERTY keyboard
         case GLFW_KEY_Z:
         case GLFW_KEY_W:
-		    getAssignementApplication()->rotate(UP);
+		    getAssignementApplication()->move(UP);
 		    break;
         case GLFW_KEY_A:
-            getAssignementApplication()->rotate(LEFT);
+            getAssignementApplication()->move(LEFT);
             break;
         case GLFW_KEY_Q:
             getAssignementApplication()->exit();
             break;
         case GLFW_KEY_S:
-            getAssignementApplication()->rotate(DOWN);
+            getAssignementApplication()->move(DOWN);
             break;
         case GLFW_KEY_D:
-            getAssignementApplication()->rotate(RIGHT);
+            getAssignementApplication()->move(RIGHT);
             break;
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -81,10 +81,10 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
             getAssignementApplication()->zoom(-1.0f);
             break;
         case GLFW_KEY_L:
-            getAssignementApplication()->rotate(15);
+            getAssignementApplication()->rotate(5);
             break;
         case GLFW_KEY_H:
-            getAssignementApplication()->rotate(-15);
+            getAssignementApplication()->rotate(-5);
             // counter-clockwise rotation
             break;
         default:
@@ -293,10 +293,10 @@ unsigned AssignementApplication::Run() {
     shader->Bind();
 
     // Use PerspectiveCamera class instead
-    camera = PerspectiveCamera(PerspectiveCamera::Frustrum{glm::radians(45.0f), 1.0f, 1.0f, 1.0f, -10.0f},
+    camera = PerspectiveCamera(PerspectiveCamera::Frustrum{glm::radians(45.0f), 1.0f, 1.0f, 1.0f, 10.0f},
                                                  glm::vec3(0.0f, -3.0f, 2.0f),
                                                  glm::vec3(0.0f, 0.0f, 0.0f),
-                                                 glm::vec3(0.0f, 1.0f, 1.0f));
+                                                 glm::vec3(0.0f, 0.0f, 1.0f));
 
     shader->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
 
