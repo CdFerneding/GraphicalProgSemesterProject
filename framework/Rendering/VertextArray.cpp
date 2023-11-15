@@ -54,6 +54,8 @@ void VertexArray::Unbind() const {
 }
 
 void VertexArray::SetIndexBuffer(const std::shared_ptr<IndexBuffer> &indexBuffer) {
+    this->Bind();
+    indexBuffer->Bind();
     IdxBuffer = indexBuffer;
-    IdxBuffer->Bind();
+    indexBuffer->Unbind();
 }
