@@ -63,6 +63,5 @@ void PerspectiveCamera::rotateArroundLookAt(float degree) {
     Position = glm::vec3(rotatedVector);
 
     //print the new position
-    std::cout << "New position: " << this->Position.x << ", " << this->Position.y << ", " << this->Position.z << std::endl;
     this->RecalculateMatrix();
 }
