@@ -81,21 +81,20 @@ void Lab4Application::move(Direction direction) {
         currentYSelected = (currentYSelected + 1) % numberOfSquare;
         break;
     case DOWN:
-        currentYSelected = (currentYSelected - 1) % numberOfSquare;
+        currentYSelected = (currentYSelected - 1 + numberOfSquare) % numberOfSquare;
         break;
     case LEFT:
         currentXSelected = (currentXSelected + 1) % numberOfSquare;
         break;
     case RIGHT:
-        currentXSelected = (currentXSelected - 1) % numberOfSquare;
+        currentXSelected = (currentXSelected - 1 + numberOfSquare) % numberOfSquare;
         break;
     default:
         hasMoved = false;
         break;
     }
-    //std::cout << "Current X: " << currentXSelected << std::endl;
-    //std::cout << "Current Y: " << currentYSelected << std::endl;
 }
+
 
 void Lab4Application::rotateCube(Direction direction) {
     hasRotated = true;
@@ -118,22 +117,24 @@ void Lab4Application::rotateCube(Direction direction) {
 }
 
 std::vector<float> Lab4Application::createSelectionCube() const {
-    float cubeSize = 2.0f / static_cast<float>(numberOfSquare);
-    float XSelected = static_cast<float>(currentXSelected);
-    float YSelected = static_cast<float>(currentYSelected);
+    float sideLength = 2.0f / static_cast<float>(numberOfSquare);
+    float halfSideLength = sideLength * 0.5f;
 
+    // cube centered around origin
     std::vector<float> selectionCube = {
-        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1, 
-        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        -halfSideLength, -halfSideLength, -halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        -halfSideLength, -halfSideLength + sideLength, -halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        -halfSideLength + sideLength, -halfSideLength + sideLength, -halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        -halfSideLength + sideLength, -halfSideLength, -halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        -halfSideLength, -halfSideLength, halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        -halfSideLength, -halfSideLength + sideLength, halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        -halfSideLength + sideLength, -halfSideLength + sideLength, halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        -halfSideLength + sideLength, -halfSideLength, halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
     };
     return selectionCube;
 }
+
+
 
 
 unsigned Lab4Application::Run() {
@@ -241,7 +242,7 @@ unsigned Lab4Application::Run() {
     //--------------------------------------------------------------------------------------------------------------
     TextureManager* textureManager = TextureManager::GetInstance(); 
     // Load 2D texture for the grid
-    bool success2D = textureManager->LoadTexture2DRGBA("gridTexture", "resources/textures/black-tile.jpg", 0, true);
+    bool success2D = textureManager->LoadTexture2DRGBA("gridTexture", "resources/textures/wood.jpg", 0, true);
     if (!success2D) {
         std::cout << "2D Texture not loaded correctly." << std::endl;
     }
@@ -270,7 +271,8 @@ unsigned Lab4Application::Run() {
     //Wireframe mode
     //RenderCommands::SetWireframeMode();
 
-
+    glm::mat4 model = glm::mat4(1.0f); 
+    hasMoved = true;
     //--------------------------------------------------------------------------------------------------------------
     //
     // start execution
@@ -278,76 +280,56 @@ unsigned Lab4Application::Run() {
     //--------------------------------------------------------------------------------------------------------------
     while (!glfwWindowShouldClose(window))
     {
-        //preparation of Window and Shader
+        // preparation of Window and Shader
         RenderCommands::SetClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
         RenderCommands::Clear();
 
-        // input
-        glfwSetKeyCallback(window, Lab4Application::key_callback); 
+        // input handling
+        glfwSetKeyCallback(window, Lab4Application::key_callback);
 
-        // draw Grid
+        // bind grid buffer, upload grid uniforms, draw grid
         VAO_Grid->Bind();
-        shaderGrid->Bind(); 
-        shaderGrid->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
+        shaderGrid->Bind();
+        shaderGrid->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix()); 
         shaderGrid->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderGrid->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
         shaderGrid->UploadUniform1i("uTexture", gridTextureUnit);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Grid);
-        
-        // Bind Cube Buffers
-        VAO_Cube->Bind();
-        shaderCube->Bind(); 
 
+        // handle cube rotation, translations with the model matrix
+        if (hasMoved || hasRotated)
+        {
+            model = glm::mat4(1.0f);
 
-        if (hasMoved) {
-            cubeVertices = createSelectionCube();
-            //Update vertexbufferCube with the content of createSelectionCube
-            VBO_Cube->BufferSubData(0, sizeof(float) * cubeVertices.size(), cubeVertices.data());
+            // helper
+            float sideLength = 2.0f / static_cast<float>(numberOfSquare); 
+            float bottomRight = numberOfSquare * sideLength -1; 
+
+            // Update translation to position the cube relative to the bottom right corner
+            //TODO: if everything would have been set up correct "- sideLength * numberOfSquare" (basically an additional offset) 
+            // should not have been neccessary. ("+ sideLength / 2" is neccessary because the ccube spawns in the origin 
+            // and therefore on an edge of the grid)
+            float translationX = bottomRight - currentXSelected * sideLength - sideLength / 2; 
+            float translationY = bottomRight + currentYSelected * sideLength + sideLength / 2 - sideLength * numberOfSquare;
+            model = glm::translate(model, glm::vec3(translationX, translationY, sideLength / 2 + 0.01f));
+
+            // Apply rotation to the cube
+            model = glm::rotate(model, glm::radians(rotationAngleX), glm::vec3(1.0f, 0.0f, 0.0f));
+            model = glm::rotate(model, glm::radians(rotationAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
 
             hasMoved = false;
-            hasRotated = true;
-            currentRotationAngleX = 0;
-            currentRotationAngleY = 0;
-        }
-
-        if (hasRotated) {
-            // Get the gravity center of the cube
-            float gravityPoint[3] = { 0.0f, 0.0f, 0.0f };
-
-            for (int i = 0; i < cubeVertices.size(); i += numOfAttributes) {
-                gravityPoint[0] += cubeVertices[i];
-                gravityPoint[1] += cubeVertices[i + 1];
-                gravityPoint[2] += cubeVertices[i + 2];
-            }
-
-            gravityPoint[0] /= 8;
-            gravityPoint[1] /= 8;
-            gravityPoint[2] /= 8;
-
-            //To rotate the cube around its center, we need to translate the cube to the origin, rotate it and translate it back to its original position
-            cubeVertices = GeometricTools::translateCubeGeneric(cubeVertices, -gravityPoint[0], -gravityPoint[1], -gravityPoint[2], numOfAttributes);
-
-            //Rotate the cube
-            cubeVertices = GeometricTools::rotateCubeGeneric(cubeVertices, rotationAngleX - currentRotationAngleX, rotationAngleY - currentRotationAngleY, 0, numOfAttributes);
-
-            //Translate the cube back to its original position
-            cubeVertices = GeometricTools::translateCubeGeneric(cubeVertices, gravityPoint[0], gravityPoint[1], gravityPoint[2], numOfAttributes);
-
-            //Update vertexbufferCube with the content of new_cube
-            VBO_Cube->BufferSubData(0, sizeof(float) * 5 * 8, cubeVertices.data());
-
-            currentRotationAngleX = rotationAngleX;
-            currentRotationAngleY = rotationAngleY;
-
             hasRotated = false;
         }
 
-        // give uniforms, draw cube
-        shaderCube->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix()); 
-        shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix()); 
-        shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix()); 
-        shaderCube->UploadUniform1i("CubeMap", cubeTextureUnit); 
-        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube); 
+
+        // bind Cube Buffers, upload cube uniforms, draw cube
+        VAO_Cube->Bind(); 
+        shaderCube->Bind();
+        shaderCube->UploadUniformMatrix4fv("u_Model", model); 
+        shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
+        shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+        shaderCube->UploadUniform1i("CubeMap", cubeTextureUnit);
+        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
