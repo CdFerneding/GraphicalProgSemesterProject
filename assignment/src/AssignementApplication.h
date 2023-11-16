@@ -20,46 +20,107 @@ enum Direction {
 
 class AssignementApplication : public GLFWApplication {
 private:
-    unsigned int currentXSelected;
-    unsigned int currentYSelected;
 
-    float rotationAngleX;
-    float currentRotationAngleX;
-    float rotationAngleY;
-    float currentRotationAngleY;
+    unsigned int currentXSelected; // Current x position of the selector
+    unsigned int currentYSelected; // Current y position of the selector
+    unsigned int currentCubeSelected; //idx of the cube selected
 
-    Shader *shader;
-    PerspectiveCamera camera;
+    Shader *shader; // The shaders used
+    PerspectiveCamera camera; //The perspective camera used
 
-    const unsigned int numberOfSquare = 8;
-    static AssignementApplication* current_application;
-    bool hasMoved = false;
-    bool hasCameraChanged = false;
-    std::array<std::shared_ptr<VertexArray>, 8*8> cubes= {nullptr};
+    bool hasMoved; // True when the player is moving the selection square
+    bool hasCameraChanged; // True when the player is changing the camera rotation / zoom
+    bool hasCubeSelected; // true if a cube is currently selected
 
-    int currentCubeSelected = -1; //idx of the cube selected
-    std::shared_ptr<VertexArray> currentSelectedVertexArray;
-    int vertexArrayIdPerCoordinate[8][8] = {{-1},};
-    std::vector<std::shared_ptr<VertexArray>> vertexArrays;
-    std::vector<bool> colorVertexArrays;
-    bool hasCubeSelected = false;
-    void updateSelectedCube();
+    std::array<std::shared_ptr<VertexArray>, 8*8> cubes= {nullptr}; // A list of vertex array containing the cubes. To get a specific one, you can use the vertexArrayIdPerCoordinate
 
-    std::array<int, 2> previousPosition = {-1, -1};
-    std::vector<float> createSelectionSquare() const;
-    std::vector<float> createSelectionCube(float r, float g, float b, unsigned int x, unsigned int y) const;
+    int vertexArrayIdPerCoordinate[8][8] = {{-1},}; // An array containing the vertexArrayId used by a cube for a specific coordinate
+
+    std::vector<std::shared_ptr<VertexArray>> vertexArrays; // A list of vertex array. To get a specific one, you can use the vertexArrayIdPerCoordinate
+
+    std::vector<bool> colorVertexArrays; // An array containing the color of each cube according to his vertexArrayId
+
+    std::shared_ptr<VertexArray> currentSelectedVertexArray; // The vertex array of the selected cube
+
+    std::array<int, 2> previousPosition; // Contain the previous position of the selected cube, (-1,-1) otherwise
+    std::array<unsigned, 2> previousPositionSelector; // The previous position of the selection square
+
+    std::shared_ptr<VertexBuffer> vertexBufferSelectionSquare; // The vertex buffer of the selection square
+    std::vector<float> selectionSquare; // The content of the vertexBufferSelectionSquare
+
+    const unsigned int numberOfSquare = 8; // The number of square on the grid
+
+    static AssignementApplication* current_application; // The current_application used for the communication with the key_callback
+
+    /**
+     * Create the green selection square on the board according to the current X and Y position
+     * @param opacity The opacity of the square (0 if there is a cube, 1 if there isn't a cube)
+     * @return The content for the vertex buffer of the selection square
+     */
+    [[nodiscard]] std::vector<float> createSelectionSquare(float opacity) const;
+
+    /**
+     * Create a cube for a specific coordinate with a specific color
+     * @param r Red value between 0 and 1
+     * @param g Green value between 0 and 1
+     * @param b Blue value between 0 and 1
+     * @param x X coordinate
+     * @param y Y Coordinate
+     * @return
+     */
+    [[nodiscard]] std::vector<float> createCube(float r, float g, float b, unsigned int x, unsigned int y) const;
+
+    /**
+     * Function called when the player press Enter and want to move a cube (selecting the cube or setting the destination of the cube)
+     */
+    void moveCubeRequest();
 public:
     explicit AssignementApplication(const std::string& name = "Lab3", const std::string& version = "0.0.1",
         unsigned int width = 800, unsigned int height = 600);
+
     ~AssignementApplication();
-    unsigned Run();
-    unsigned stop();
+
+    unsigned Run() override;
+    unsigned stop() override;
+
+    /**
+     * Move the selection square in a specific direction
+     * @param direction The direction to move the selection square
+     */
     void move(Direction direction);
+
+    /**
+     * Function called when the player press any key on the keyboard
+     */
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    /**
+     * Function called when the key callback want to use a function of the current_application
+     * @return current_application
+     */
     static AssignementApplication* getAssignementApplication();
+
+    /**
+     * Function called by the key_callback when the player try to zoom in or out.
+     * This function change the fov of the camera
+     * @param zoomValue The value to add to the current fov
+     */
     void zoom(float zoomValue);
+
+    /**
+     * Function called by the key_callback when the player try to rotate the camera around the lookAt point
+     * It change the position of the camera
+     * @param degree The value to add to the current rotation
+     */
     void rotate(float degree);
+
+    /**
+     * Function called by the key_callback when the player try to select a cube
+     */
     void select();
+
+    /**
+     * Function called by the key_callback when the player want to exit the application
+     */
     void exit();
 };
 
