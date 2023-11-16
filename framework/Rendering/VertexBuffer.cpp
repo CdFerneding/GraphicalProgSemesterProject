@@ -40,3 +40,7 @@ void VertexBuffer::BufferSubData(GLintptr offset, GLsizeiptr size, const void* d
     Bind();
     glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
 }
+
+//void VertexBuffer::SetLayout(const BufferLayout& layout)
+//{
+//}

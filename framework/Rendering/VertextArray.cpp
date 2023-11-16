@@ -15,11 +15,6 @@ void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer> &vertexBuf
         glVertexAttribPointer(countBufferLayout, ShaderDataTypeComponentCount(attribute.Type),
                               ShaderDataTypeToOpenGLBaseType(attribute.Type), attribute.Normalized,
                               Layout.GetStride(), (const void *) i->Offset);
-
-        /*std::cout << "glVertextAttribPointer(" << countBufferLayout << ", " << ShaderDataTypeComponentCount(attribute.Type)
-                  << ", " << ShaderDataTypeToOpenGLBaseType(attribute.Type) << ", " << attribute.Normalized << ", "
-                  << attribute.Size << ", " << i->Offset << ")" << std::endl;*/
-
         glEnableVertexAttribArray(countBufferLayout);
 
         countBufferLayout++;
@@ -37,10 +32,6 @@ VertexArray::VertexArray() {
 }
 
 VertexArray::~VertexArray() {
-    IdxBuffer->~IndexBuffer();
-    for (auto &vertexBuffer : VertexBuffers) {
-        vertexBuffer->~VertexBuffer();
-    }
     glDeleteVertexArrays(1, &m_vertexArrayID);
 }
 
@@ -54,8 +45,6 @@ void VertexArray::Unbind() const {
 }
 
 void VertexArray::SetIndexBuffer(const std::shared_ptr<IndexBuffer> &indexBuffer) {
-    this->Bind();
-    indexBuffer->Bind();
     IdxBuffer = indexBuffer;
-    indexBuffer->Unbind();
+    indexBuffer->Bind();
 }

@@ -191,22 +191,21 @@ unsigned Lab4Application::Run() {
 
     // VAO Grid
     auto VAO_Grid = std::make_shared<VertexArray>(); 
-    auto VBO_grid = std::make_shared<VertexBuffer>(gridVertices.data(), sizeof(float) * gridVertices.size());
-    auto IBO_Grid = std::make_shared<IndexBuffer>(gridIndices.data(), static_cast<GLsizei>(gridIndices.size()));
-    VAO_Grid->Bind(); 
-    VBO_grid->SetLayout(*gridLayout); 
-    VAO_Grid->AddVertexBuffer(VBO_grid); 
+    VAO_Grid->Bind();
+    auto VBO_Grid = std::make_shared<VertexBuffer>(gridVertices.data(), sizeof(float) * gridVertices.size()); 
+    VBO_Grid->SetLayout(*gridLayout);
+    VAO_Grid->AddVertexBuffer(VBO_Grid);
+    auto IBO_Grid = std::make_shared<IndexBuffer>(gridIndices.data(), static_cast<GLsizei>(gridIndices.size())); 
     VAO_Grid->SetIndexBuffer(IBO_Grid);
-    
-    
+
     // VAO Cube
     auto VAO_Cube = std::make_shared<VertexArray>();
-    auto VBO_Cube = std::make_shared<VertexBuffer>(cubeVertices.data(), sizeof(float) * cubeVertices.size());
+    VAO_Cube->Bind();
+    auto VBO_Cube = std::make_shared<VertexBuffer>(cubeVertices.data(), sizeof(float) * cubeVertices.size()); 
+    VBO_Cube->SetLayout(*cubeLayout);
+    VAO_Cube->AddVertexBuffer(VBO_Cube);
     auto IBO_Cube = std::make_shared<IndexBuffer>(cubeIndices.data(), static_cast<GLsizei>(cubeIndices.size()));
-    VAO_Cube->Bind(); 
-    VBO_Cube->SetLayout(*cubeLayout);  
-    VAO_Cube->AddVertexBuffer(VBO_Cube); 
-    VAO_Cube->SetIndexBuffer(IBO_Cube); 
+    VAO_Cube->SetIndexBuffer(IBO_Cube);
 
 
     //--------------------------------------------------------------------------------------------------------------
@@ -229,10 +228,10 @@ unsigned Lab4Application::Run() {
     //--------------------------------------------------------------------------------------------------------------
     // Use PerspectiveCamera class instead
     PerspectiveCamera camera = PerspectiveCamera(
-        PerspectiveCamera::Frustrum{ glm::radians(45.0f), 1.0f, 1.0f, 1.0f, -10.0f },
-        glm::vec3(0.0f, -3.0f, 2.0f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f));
+        PerspectiveCamera::Frustrum{ glm::radians(45.0f), 1.0f, 1.0f, 1.0f, -10.0f }, // frustrum
+        glm::vec3(0.0f, -3.0f, 2.0f), // camera position
+        glm::vec3(0.0f, 0.0f, 0.0f), // lookAt
+        glm::vec3(0.0f, 1.0f, 0.0f)); // upVector
    
 
     //--------------------------------------------------------------------------------------------------------------
@@ -271,9 +270,6 @@ unsigned Lab4Application::Run() {
     //Wireframe mode
     //RenderCommands::SetWireframeMode();
 
-    // enable keycallback
-    glfwSetKeyCallback(window, Lab4Application::key_callback); 
-
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -286,6 +282,9 @@ unsigned Lab4Application::Run() {
         RenderCommands::SetClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
         RenderCommands::Clear();
 
+        // input
+        glfwSetKeyCallback(window, Lab4Application::key_callback); 
+
         // draw Grid
         VAO_Grid->Bind();
         shaderGrid->Bind(); 
@@ -294,14 +293,11 @@ unsigned Lab4Application::Run() {
         shaderGrid->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
         shaderGrid->UploadUniform1i("uTexture", gridTextureUnit);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Grid);
-        // cube
+        
+        // Bind Cube Buffers
         VAO_Cube->Bind();
         shaderCube->Bind(); 
-        shaderCube->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
-        shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
-        shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-        shaderCube->UploadUniform1i("CubeMap", cubeTextureUnit); 
-        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube);
+
 
         if (hasMoved) {
             cubeVertices = createSelectionCube();
@@ -338,8 +334,7 @@ unsigned Lab4Application::Run() {
             cubeVertices = GeometricTools::translateCubeGeneric(cubeVertices, gravityPoint[0], gravityPoint[1], gravityPoint[2], numOfAttributes);
 
             //Update vertexbufferCube with the content of new_cube
-            VBO_Cube->BufferSubData(0,
-                sizeof(float) * 5 * 8, cubeVertices.data());
+            VBO_Cube->BufferSubData(0, sizeof(float) * 5 * 8, cubeVertices.data());
 
             currentRotationAngleX = rotationAngleX;
             currentRotationAngleY = rotationAngleY;
@@ -347,18 +342,29 @@ unsigned Lab4Application::Run() {
             hasRotated = false;
         }
 
-
-        //buffer and drawing
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        // give uniforms, draw cube
+        shaderCube->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix()); 
+        shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix()); 
+        shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix()); 
+        shaderCube->UploadUniform1i("CubeMap", cubeTextureUnit); 
+        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube); 
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // Cleanup of Shader and Buffers
-    shaderGrid->Unbind();
-    VAO_Grid->Unbind();
+    // Cleanup Grid Buffers
+    shaderGrid->~Shader();
+    VAO_Grid->~VertexArray();
+    VBO_Grid->~VertexBuffer();
+    IBO_Grid->~IndexBuffer();
+
+    // Cleanup Cube Buffers
+    shaderCube->~Shader();
+    VAO_Cube->~VertexArray();
+    VBO_Grid->~VertexBuffer();
+    IBO_Cube->~IndexBuffer();
 
     return stop();
 }
