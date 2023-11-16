@@ -11,7 +11,7 @@ project(lab4)
 # Add an executable target named 'tuto_lab1_glfw' that is built from the source
 # file 'main.cpp'. This means that CMake will generate build rules to compile
 # 'main.cpp' and link it into an executable program named 'tuto_lab1_glfw'.
-add_executable(lab4 main.cpp Lab4Application.h Lab4Application.cpp shader4.h)
+add_executable(lab4 main.cpp Lab4Application.h Lab4Application.cpp "shaderGrid.h" "shaderCube.h")
 
 
 # Specify libraries to link with the 'tuto_lab1_glfw' target.
@@ -41,11 +41,6 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC TEXTURES_DIR="${CMAKE_RUNTIME_
 
 # Custom command to copy the 'cat.png' texture to the expected build directory after the build
 # This ensures that the texture is available at runtime, regardless of where the executable is invoked from
-add_custom_command(
-  TARGET ${PROJECT_NAME} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/textures/black-tile.jpg
-  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures/black-tile.jpg)
 
 # Custom command to copy all files from the 'textures' directory
 add_custom_command(

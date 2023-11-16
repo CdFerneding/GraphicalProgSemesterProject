@@ -1,5 +1,6 @@
 #include "Lab4Application.h"
-#include "shader4.h"
+#include "shaderGrid.h"
+#include "shaderCube.h"
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
 #include "./../Rendering/VertexBuffer.h"
@@ -23,7 +24,7 @@ Lab4Application::Lab4Application(const std::string& name, const std::string& ver
     unsigned int width, unsigned int height) : GLFWApplication(name, version, width, height) {
     currentXSelected = 0;
     currentYSelected = 0;
-        rotationAngleX = 0;
+    rotationAngleX = 0;
     rotationAngleY = 0;
     currentRotationAngleX = 0;
     currentRotationAngleY = 0;
@@ -116,32 +117,20 @@ void Lab4Application::rotateCube(Direction direction) {
     }
 }
 
-std::vector<float> Lab4Application::createSelectionSquare() const {
-
-    std::vector<float> selectionSquare = {
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 0, 0,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.0, 0, 0,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.0, 0, 0,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0, 0, 0
-    };
-
-    return selectionSquare;
-}
-
 std::vector<float> Lab4Application::createSelectionCube() const {
     float cubeSize = 2.0f / static_cast<float>(numberOfSquare);
     float XSelected = static_cast<float>(currentXSelected);
     float YSelected = static_cast<float>(currentYSelected);
 
     std::vector<float> selectionCube = {
-        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, 0.1, 1, 1,
-        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), 0.1, 1, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), 0.1, 1, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, 0.1, 1, 1,
-        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, cubeSize, 1, 1,
-        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), cubeSize, 1, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), cubeSize, 1, 1,
-        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, cubeSize, 1, 1,
+        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, 0.1, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        1 - cubeSize * XSelected, -1 + cubeSize * YSelected, cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1, 
+        1 - cubeSize * XSelected, -1 + cubeSize * (YSelected + 1), cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * (YSelected + 1), cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        1 - cubeSize * (XSelected + 1), -1 + cubeSize * YSelected, cubeSize, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
     };
     return selectionCube;
 }
@@ -152,144 +141,168 @@ unsigned Lab4Application::Run() {
     hasRotated = false;
     hasMoved = false;
 
-    auto grid = GeometricTools::UnitGridGeometry2DWTCoords(numberOfSquare);
-    auto indices = GeometricTools::UnitGrid2DTopologyLab4(numberOfSquare); 
 
-    auto selectionCube = createSelectionCube();
-
-    grid.insert(grid.end(), selectionCube.begin(), selectionCube.end());
-
-    //std::cout << triangle.size() << " " << triangle.size() / 7 << std::endl;
-    auto vertexArray = std::make_shared<VertexArray>();
-
-    auto indicesSelectionSquare = GeometricTools::TopologySquare2D;
-
-    for (unsigned i : indicesSelectionSquare) {
-        unsigned index = (numberOfSquare + 1) * (numberOfSquare + 1) * 2 + i;
-        // Ensure the index is within the bounds of selectionSquare
-        index = std::min(index, static_cast<unsigned>(selectionCube.size() - 1));
-        indices.push_back(index);
-    }
+    //--------------------------------------------------------------------------------------------------------------
+    //
+    //  define vertices and indices for the grid and the cube
+    //
+    //--------------------------------------------------------------------------------------------------------------
 
 
+    auto gridVertices = GeometricTools::UnitGridGeometry2DWTCoords(numberOfSquare);
+    auto gridIndices = GeometricTools::UnitGrid2DTopology(numberOfSquare); 
 
-    auto indexBuffer = std::make_shared<IndexBuffer>(indices.data(), static_cast<GLsizei>(indices.size()));
-    auto gridBufferLayout = std::make_shared<BufferLayout>(BufferLayout({
+    auto cubeVertices = createSelectionCube();
+    auto cubeIndices = GeometricTools::CubeTopology; 
+    
+    
+    //--------------------------------------------------------------------------------------------------------------
+    //
+    //  define the layout for the grid and the cube
+    //
+    //--------------------------------------------------------------------------------------------------------------
+
+    // grid Layout
+    auto gridLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false},
+        {ShaderDataType::Float4, "color", false},
         {ShaderDataType::Float2, "texCoords", false}
         }));
+    // cube Layout
+    auto cubeLayout = std::make_shared<BufferLayout>(BufferLayout({
+        {ShaderDataType::Float3, "position", false},
+        {ShaderDataType::Float4, "color", false},
+        }));
 
-
+    // calculate numberOfAttributes of the cube to dynamically handle moving and rotation of the cube
     unsigned int numOfAttributes = 0;
-    for (int i = 0; i < gridBufferLayout->GetAttributes().size(); i++) {
+    for (int i = 0; i < cubeLayout->GetAttributes().size(); i++) {
         // considering we are using Float: division by 4
         // otherwise I think a switch case statement would be necessary 
-        auto attribute = gridBufferLayout->GetAttributes()[i];
+        auto attribute = cubeLayout->GetAttributes()[i];
         numOfAttributes += attribute.Size / 4;
-        //std::cout << numOfAttributes << std::endl; 
     }
 
-    auto vertexBuffer = std::make_shared<VertexBuffer>(grid.data(), sizeof(float) * grid.size());
+    //--------------------------------------------------------------------------------------------------------------
+    //
+    //  prepping for the grid and the cube
+    //
+    //--------------------------------------------------------------------------------------------------------------
 
-    auto cube = createSelectionCube();
+    // VAO Grid
+    auto VAO_Grid = std::make_shared<VertexArray>(); 
+    VAO_Grid->Bind();
+    auto VBO_Grid = std::make_shared<VertexBuffer>(gridVertices.data(), sizeof(float) * gridVertices.size()); 
+    VBO_Grid->SetLayout(*gridLayout);
+    VAO_Grid->AddVertexBuffer(VBO_Grid);
+    auto IBO_Grid = std::make_shared<IndexBuffer>(gridIndices.data(), static_cast<GLsizei>(gridIndices.size())); 
+    VAO_Grid->SetIndexBuffer(IBO_Grid);
 
-    auto vertexArrayCube = std::make_shared<VertexArray>();
+    // VAO Cube
+    auto VAO_Cube = std::make_shared<VertexArray>();
+    VAO_Cube->Bind();
+    auto VBO_Cube = std::make_shared<VertexBuffer>(cubeVertices.data(), sizeof(float) * cubeVertices.size()); 
+    VBO_Cube->SetLayout(*cubeLayout);
+    VAO_Cube->AddVertexBuffer(VBO_Cube);
+    auto IBO_Cube = std::make_shared<IndexBuffer>(cubeIndices.data(), static_cast<GLsizei>(cubeIndices.size()));
+    VAO_Cube->SetIndexBuffer(IBO_Cube);
 
-    auto indicesCube = GeometricTools::CubeTopology;
 
-    auto indexBufferCube = std::make_shared<IndexBuffer>(indicesCube.data(), static_cast<GLsizei>(indicesCube.size()));
-
-    auto vertexBufferCube = std::make_shared<VertexBuffer>(cube.data(), sizeof(float) * cube.size());
-
-    vertexBufferCube->SetLayout(*gridBufferLayout);
-    vertexArrayCube->AddVertexBuffer(vertexBufferCube);
-    vertexArrayCube->SetIndexBuffer(indexBufferCube);
-
-    vertexArrayCube->Bind();
-    vertexBuffer->SetLayout(*gridBufferLayout);
-    //vertexArray->AddVertexBuffer(vertexBufferColor);
-
-    vertexArray->AddVertexBuffer(vertexBuffer);
-    vertexArray->SetIndexBuffer(indexBuffer);
-
-    vertexArray->Bind();
-
+    //--------------------------------------------------------------------------------------------------------------
     //
     // Shader module
     //
-    auto* shaderCube = new Shader(vertexShaderSrc, fragmentShaderSrc);
+    //--------------------------------------------------------------------------------------------------------------
+    // Grid shader
+    auto* shaderGrid = new Shader(VS_Grid, FS_Grid);
+    shaderGrid->Bind();
+    // Cube
+    auto* shaderCube = new Shader(VS_Cube, FS_Cube);
     shaderCube->Bind();
 
-    auto* shader = new Shader(vertexShaderSrc, fragmentShaderSrc);
-    shader->Bind();
 
+    //--------------------------------------------------------------------------------------------------------------
     //
     // camera
     //
+    //--------------------------------------------------------------------------------------------------------------
     // Use PerspectiveCamera class instead
     PerspectiveCamera camera = PerspectiveCamera(
-        PerspectiveCamera::Frustrum{ glm::radians(45.0f), 1.0f, 1.0f, 1.0f, -10.0f },
-        glm::vec3(0.0f, -3.0f, 2.0f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f));
+        PerspectiveCamera::Frustrum{ glm::radians(45.0f), 1.0f, 1.0f, 1.0f, -10.0f }, // frustrum
+        glm::vec3(0.0f, -3.0f, 2.0f), // camera position
+        glm::vec3(0.0f, 0.0f, 0.0f), // lookAt
+        glm::vec3(0.0f, 1.0f, 0.0f)); // upVector
+   
 
-    shader->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
-
-    shader->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
-
-    shader->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-
-    glfwSetKeyCallback(window, Lab4Application::key_callback);
-
+    //--------------------------------------------------------------------------------------------------------------
     //
     // Texture module
     //
+    //--------------------------------------------------------------------------------------------------------------
     TextureManager* textureManager = TextureManager::GetInstance(); 
-    
-    // Load 2D texture
-    /*bool success2D = textureManager->LoadTexture2DRGBA("white-marmor", "resources/textures/white-tile.jpg", 0, true);
+    // Load 2D texture for the grid
+    bool success2D = textureManager->LoadTexture2DRGBA("gridTexture", "resources/textures/black-tile.jpg", 0, true);
     if (!success2D) {
         std::cout << "2D Texture not loaded correctly." << std::endl;
     }
-    GLuint textureUnitFloor = textureManager->GetUnitByName("white-marmor"); */
+    // Give the textures to the shader
+    GLuint gridTextureUnit = textureManager->GetUnitByName("gridTexture"); 
 
     // Load Cube Map
-    bool successCube = textureManager->LoadCubeMapRGBA("black-marmor", "resources/textures/black-tile.jpg", 0, true);
+    bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/black-tile.jpg", 0, true);
     if (!successCube) {
         std::cout << "Cube Map not loaded correctly." << std::endl;
     }
-    GLuint textureUnitCube = textureManager->GetUnitByName("black-marmor");
-    shader->UploadUniform1i("CubeMap", textureUnitCube); // black 
-
-    // Give the textures to the shader
-    //shader->UploadUniform1i("uTexture", textureUnitCube); // white 
+    GLuint cubeTextureUnit = textureManager->GetUnitByName("cubeTexture");
     
     glfwSetKeyCallback(window, Lab4Application::key_callback);
 
+    // Enable blending
+    glEnable(GL_BLEND);
+    // Set the blending function: s*alpha + d(1-alpha)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
     //Wireframe mode
     //RenderCommands::SetWireframeMode();
 
+
+    //--------------------------------------------------------------------------------------------------------------
+    //
+    // start execution
+    //
+    //--------------------------------------------------------------------------------------------------------------
     while (!glfwWindowShouldClose(window))
     {
         //preparation of Window and Shader
         RenderCommands::SetClearColor(0.663f, 0.663f, 0.663f, 1.0f); // Set clear color to a shade of gray
         RenderCommands::Clear();
 
-        shader->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
+        // input
+        glfwSetKeyCallback(window, Lab4Application::key_callback); 
 
-        RenderCommands::DrawIndex(
-            GL_TRIANGLES,
-            vertexArray
-        );
+        // draw Grid
+        VAO_Grid->Bind();
+        shaderGrid->Bind(); 
+        shaderGrid->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
+        shaderGrid->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
+        shaderGrid->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+        shaderGrid->UploadUniform1i("uTexture", gridTextureUnit);
+        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Grid);
+        
+        // Bind Cube Buffers
+        VAO_Cube->Bind();
+        shaderCube->Bind(); 
+
+
         if (hasMoved) {
-            selectionCube = createSelectionCube();
-            //Update vertexbufferCube with the content of createCube
-            vertexBufferCube->BufferSubData(0, sizeof(float) * selectionCube.size(), selectionCube.data());
+            cubeVertices = createSelectionCube();
+            //Update vertexbufferCube with the content of createSelectionCube
+            VBO_Cube->BufferSubData(0, sizeof(float) * cubeVertices.size(), cubeVertices.data());
 
             hasMoved = false;
             hasRotated = true;
@@ -301,10 +314,10 @@ unsigned Lab4Application::Run() {
             // Get the gravity center of the cube
             float gravityPoint[3] = { 0.0f, 0.0f, 0.0f };
 
-            for (int i = 0; i < selectionCube.size(); i += 5) {
-                gravityPoint[0] += selectionCube[i];
-                gravityPoint[1] += selectionCube[i + 1];
-                gravityPoint[2] += selectionCube[i + 2];
+            for (int i = 0; i < cubeVertices.size(); i += numOfAttributes) {
+                gravityPoint[0] += cubeVertices[i];
+                gravityPoint[1] += cubeVertices[i + 1];
+                gravityPoint[2] += cubeVertices[i + 2];
             }
 
             gravityPoint[0] /= 8;
@@ -312,20 +325,16 @@ unsigned Lab4Application::Run() {
             gravityPoint[2] /= 8;
 
             //To rotate the cube around its center, we need to translate the cube to the origin, rotate it and translate it back to its original position
-
-            selectionCube = GeometricTools::translateCubeGeneric(selectionCube, -gravityPoint[0], -gravityPoint[1], -gravityPoint[2], numOfAttributes);
+            cubeVertices = GeometricTools::translateCubeGeneric(cubeVertices, -gravityPoint[0], -gravityPoint[1], -gravityPoint[2], numOfAttributes);
 
             //Rotate the cube
-
-            selectionCube = GeometricTools::rotateCubeGeneric(selectionCube, rotationAngleX - currentRotationAngleX, rotationAngleY - currentRotationAngleY, 0, numOfAttributes);
+            cubeVertices = GeometricTools::rotateCubeGeneric(cubeVertices, rotationAngleX - currentRotationAngleX, rotationAngleY - currentRotationAngleY, 0, numOfAttributes);
 
             //Translate the cube back to its original position
-
-            selectionCube = GeometricTools::translateCubeGeneric(selectionCube, gravityPoint[0], gravityPoint[1], gravityPoint[2], numOfAttributes);
+            cubeVertices = GeometricTools::translateCubeGeneric(cubeVertices, gravityPoint[0], gravityPoint[1], gravityPoint[2], numOfAttributes);
 
             //Update vertexbufferCube with the content of new_cube
-            vertexBufferCube->BufferSubData(0,
-                sizeof(float) * 5 * 8, selectionCube.data());
+            VBO_Cube->BufferSubData(0, sizeof(float) * 5 * 8, cubeVertices.data());
 
             currentRotationAngleX = rotationAngleX;
             currentRotationAngleY = rotationAngleY;
@@ -333,22 +342,29 @@ unsigned Lab4Application::Run() {
             hasRotated = false;
         }
 
-        RenderCommands::DrawIndex(
-            GL_TRIANGLES,
-            vertexArrayCube
-        );
-
-        //buffer and drawing
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        // give uniforms, draw cube
+        shaderCube->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix()); 
+        shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix()); 
+        shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix()); 
+        shaderCube->UploadUniform1i("CubeMap", cubeTextureUnit); 
+        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube); 
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // Cleanup of Shader and Buffers
-    shader->Unbind();
-    vertexArray->Unbind();
+    // Cleanup Grid Buffers
+    shaderGrid->~Shader();
+    VAO_Grid->~VertexArray();
+    VBO_Grid->~VertexBuffer();
+    IBO_Grid->~IndexBuffer();
+
+    // Cleanup Cube Buffers
+    shaderCube->~Shader();
+    VAO_Cube->~VertexArray();
+    VBO_Grid->~VertexBuffer();
+    IBO_Cube->~IndexBuffer();
 
     return stop();
 }
