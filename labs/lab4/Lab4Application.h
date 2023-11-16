@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "GLFWApplication.h"
+#include <glm/glm.hpp>
 
 enum Direction {
     UP,
@@ -26,6 +27,9 @@ private:
     static Lab4Application* current_application;
     bool hasMoved;
     bool hasRotated;
+
+    // handle cube color changes
+    static glm::vec4 cubeColor;
 
     std::vector<float> createSelectionSquare() const;
     std::vector<float> createSelectionCube() const;

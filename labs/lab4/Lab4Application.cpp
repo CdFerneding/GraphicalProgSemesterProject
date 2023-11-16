@@ -8,7 +8,6 @@
 #include "../../framework/Rendering/Shader.h"
 #include "OrthographicCamera.h"
 #include "PerspectiveCamera.h"
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "./../Rendering/TextureManager.h"
@@ -17,7 +16,7 @@
 // stb requires the use of a compilation definition
 #define STB_IMAGE_IMPLEMENTATION
 
-
+glm::vec4 Lab4Application::cubeColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); 
 Lab4Application* Lab4Application::current_application = nullptr;
 
 Lab4Application::Lab4Application(const std::string& name, const std::string& version,
@@ -38,6 +37,7 @@ void Lab4Application::key_callback(GLFWwindow* window, int key, int scancode, in
 
     if (action == GLFW_PRESS) {
         switch (key) {
+        // input for moving the cube
         case GLFW_KEY_UP:
             getLab4Application()->move(UP);
             break;
@@ -51,7 +51,8 @@ void Lab4Application::key_callback(GLFWwindow* window, int key, int scancode, in
             getLab4Application()->move(RIGHT);
             break;
 
-         // There is two key for up and left because we are using a QWERTY and an AZERTY keyboard
+        // input for rotation
+        // There is two key for up and left because we are using a QWERTY and an AZERTY keyboard
         case GLFW_KEY_Z:
         case GLFW_KEY_W:
             getLab4Application()->rotateCube(UP);
@@ -69,6 +70,18 @@ void Lab4Application::key_callback(GLFWwindow* window, int key, int scancode, in
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
             break;
+
+        // input for changing the cube color
+        case GLFW_KEY_1:
+            cubeColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);  // Red
+            break;
+        case GLFW_KEY_2:
+            cubeColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);  // Green
+            break;
+        case GLFW_KEY_3:
+            cubeColor = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);  // Blue
+            break;
+
         default:
             break;
         }
@@ -122,14 +135,14 @@ std::vector<float> Lab4Application::createSelectionCube() const {
 
     // cube centered around origin
     std::vector<float> selectionCube = {
-        -halfSideLength, -halfSideLength, -halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        -halfSideLength, -halfSideLength + sideLength, -halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        -halfSideLength + sideLength, -halfSideLength + sideLength, -halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        -halfSideLength + sideLength, -halfSideLength, -halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        -halfSideLength, -halfSideLength, halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        -halfSideLength, -halfSideLength + sideLength, halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        -halfSideLength + sideLength, -halfSideLength + sideLength, halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
-        -halfSideLength + sideLength, -halfSideLength, halfSideLength, 185 / 255.0f, 89 / 255.0f, 235 / 255.0f, 1,
+        -halfSideLength, -halfSideLength, -halfSideLength, 
+        -halfSideLength, -halfSideLength + sideLength, -halfSideLength, 
+        -halfSideLength + sideLength, -halfSideLength + sideLength, -halfSideLength, 
+        -halfSideLength + sideLength, -halfSideLength, -halfSideLength, 
+        -halfSideLength, -halfSideLength, halfSideLength, 
+        -halfSideLength, -halfSideLength + sideLength, halfSideLength, 
+        -halfSideLength + sideLength, -halfSideLength + sideLength, halfSideLength, 
+        -halfSideLength + sideLength, -halfSideLength, halfSideLength, 
     };
     return selectionCube;
 }
@@ -172,17 +185,8 @@ unsigned Lab4Application::Run() {
     // cube Layout
     auto cubeLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false},
-        {ShaderDataType::Float4, "color", false},
         }));
 
-    // calculate numberOfAttributes of the cube to dynamically handle moving and rotation of the cube
-    unsigned int numOfAttributes = 0;
-    for (int i = 0; i < cubeLayout->GetAttributes().size(); i++) {
-        // considering we are using Float: division by 4
-        // otherwise I think a switch case statement would be necessary 
-        auto attribute = cubeLayout->GetAttributes()[i];
-        numOfAttributes += attribute.Size / 4;
-    }
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -239,10 +243,11 @@ unsigned Lab4Application::Run() {
     //
     // Texture module
     //
+    // texture pictures are: "white-tile", "black-tile", "grass", "wood"
     //--------------------------------------------------------------------------------------------------------------
     TextureManager* textureManager = TextureManager::GetInstance(); 
     // Load 2D texture for the grid
-    bool success2D = textureManager->LoadTexture2DRGBA("gridTexture", "resources/textures/wood.jpg", 0, true);
+    bool success2D = textureManager->LoadTexture2DRGBA("gridTexture", "resources/textures/white-tile.jpg", 0, true);
     if (!success2D) {
         std::cout << "2D Texture not loaded correctly." << std::endl;
     }
@@ -250,6 +255,7 @@ unsigned Lab4Application::Run() {
     GLuint gridTextureUnit = textureManager->GetUnitByName("gridTexture"); 
 
     // Load Cube Map
+    //TODO: loading the wood texture (all textures exept black-tile) does not work for the cubemap (whyever that might be).
     bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/black-tile.jpg", 0, true);
     if (!successCube) {
         std::cout << "Cube Map not loaded correctly." << std::endl;
@@ -258,25 +264,25 @@ unsigned Lab4Application::Run() {
     
     glfwSetKeyCallback(window, Lab4Application::key_callback);
 
-    // Enable blending
+    // Enable blending (neccessary for semi-transparent cube)
     glEnable(GL_BLEND);
-    // Set the blending function: s*alpha + d(1-alpha)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
-    //Wireframe mode
-    //RenderCommands::SetWireframeMode();
-
+    
+    // Renderloop variables
     glm::mat4 model = glm::mat4(1.0f); 
     hasMoved = true;
+
     //--------------------------------------------------------------------------------------------------------------
     //
     // start execution
     //
+    // important notice:
+    // for semi-transparancy (blending) to work opaque objects have to be drawn first!
+    // Also OpenGL Depth-Test functionality might interfere
     //--------------------------------------------------------------------------------------------------------------
     while (!glfwWindowShouldClose(window))
     {
@@ -328,6 +334,7 @@ unsigned Lab4Application::Run() {
         shaderCube->UploadUniformMatrix4fv("u_Model", model); 
         shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+        shaderCube->UploadUniformFloat4("u_CubeColor", cubeColor);
         shaderCube->UploadUniform1i("CubeMap", cubeTextureUnit);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube);
 

@@ -38,9 +38,6 @@ const std::string FS_Grid = R"(
     {
         // Sample the texture using the texture coordinates
         vec4 texColor = texture(uTexture, fragTexCoords);
-        
-        //color = texColor;
-        //color = fragColor;
 
         // Mix the color from the vertex attribute with the texture color
         // Adjust the alpha value manually

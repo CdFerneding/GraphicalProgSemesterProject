@@ -6,9 +6,7 @@
 const std::string VS_Cube = R"(
     #version 430 core
     layout(location = 0) in vec3 position;
-    layout(location = 1) in vec4 color;
 
-    out vec4 fragColor;
     out vec3 TexCoords;
 
     uniform mat4 u_Model;
@@ -19,17 +17,16 @@ const std::string VS_Cube = R"(
     {
         TexCoords = position;
         gl_Position = u_Projection * u_View * u_Model * vec4(position, 1.0);
-        fragColor = color;
     }
 )";
 
 const std::string FS_Cube = R"(
     #version 430 core
 
-    in vec4 fragColor;
     in vec3 TexCoords;
     
     uniform samplerCube CubeMap;
+    uniform vec4 u_CubeColor;
 
     out vec4 color;
     
@@ -38,15 +35,7 @@ const std::string FS_Cube = R"(
         // Sample the texture using the texture coordinates
         vec4 texColor = texture(CubeMap, TexCoords);
         
-        color = texColor;
-        //color = fragColor;
-
-        // Mix the color from the vertex attribute with the texture color
-        // Adjust the alpha value manually
-        //vec4 mixedColor = mix(fragColor, vec4(texColor.rgb, 1.0), 0.6);
-
-        // Output the final color
-        //color = mixedColor;
+        color = mix(vec4(texColor.rgb, 0.5), u_CubeColor, 0.3);
     }
 )";
 
