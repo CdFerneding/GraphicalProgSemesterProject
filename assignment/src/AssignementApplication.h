@@ -45,7 +45,7 @@ private:
     std::array<int, 2> previousPosition; // Contain the previous position of the selected cube, (-1,-1) otherwise
     std::array<unsigned, 2> previousPositionSelector; // The previous position of the selection square
 
-    std::shared_ptr<VertexBuffer> vertexBufferSelectionSquare; // The vertex buffer of the selection square
+    std::shared_ptr<VertexBuffer> VBO_SelectionSquare; // The vertex buffer of the selection square
     std::vector<float> selectionSquare; // The content of the vertexBufferSelectionSquare
 
     const unsigned int numberOfSquare = 8; // The number of square on the grid
@@ -59,23 +59,18 @@ private:
      */
     [[nodiscard]] std::vector<float> createSelectionSquare(float opacity) const;
 
-    /**
-     * Create a cube for a specific coordinate with a specific color
-     * @param r Red value between 0 and 1
-     * @param g Green value between 0 and 1
-     * @param b Blue value between 0 and 1
-     * @param x X coordinate
-     * @param y Y Coordinate
-     * @return
-     */
-    [[nodiscard]] std::vector<float> createCube(float r, float g, float b, unsigned int x, unsigned int y) const;
+    /** 
+    creates a unit at the origin
+    (neccessary to apply the cubemap)
+    */
+    std::vector<float> createUnit() const;
 
     /**
      * Function called when the player press Enter and want to move a cube (selecting the cube or setting the destination of the cube)
      */
     void moveCubeRequest();
 public:
-    explicit AssignementApplication(const std::string& name = "Lab3", const std::string& version = "0.0.1",
+    explicit AssignementApplication(const std::string& name = "assignment", const std::string& version = "0.0.1",
         unsigned int width = 800, unsigned int height = 600);
 
     ~AssignementApplication();

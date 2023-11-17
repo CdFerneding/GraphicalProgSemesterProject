@@ -220,10 +220,8 @@ unsigned Lab4Application::Run() {
     //--------------------------------------------------------------------------------------------------------------
     // Grid shader
     auto* shaderGrid = new Shader(VS_Grid, FS_Grid);
-    shaderGrid->Bind();
     // Cube
     auto* shaderCube = new Shader(VS_Cube, FS_Cube);
-    shaderCube->Bind();
 
 
     //--------------------------------------------------------------------------------------------------------------
