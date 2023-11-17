@@ -30,20 +30,23 @@ const std::string FS_Grid = R"(
     in vec2 fragTexCoords;
     in vec4 fragColor;
 
-    uniform sampler2D uTexture;
+    uniform sampler2D u_Texture;
     uniform float u_TextureState;
 
     out vec4 color;
     
     void main()
     {
-        // Sample the texture using the texture coordinates
-        if(u_TextureState) {
-            vec4 texColor = texture(uTexture, fragTexCoords);
+        if(u_TextureState != 0.0f) {
+            // Sample the texture using the texture coordinates
+            vec4 texColor = texture(u_Texture, fragTexCoords);
 
             // Mix the color from the vertex attribute with the texture color
-            // Adjust the alpha value manually for mixing 
-            color = mix(fragColor, vec4(texColor.rgb, u_Opacity), 0.6);
+            // Adjust the alpha value manually
+            vec4 mixedColor = mix(fragColor, vec4(texColor.rgb, 1.0), 0.6);
+
+            // Output the final color
+            color = mixedColor;
         } else {
             color = fragColor;
         }

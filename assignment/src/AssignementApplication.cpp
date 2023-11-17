@@ -37,7 +37,7 @@ AssignementApplication::AssignementApplication(const std::string& name, const st
 
     shader = nullptr;
 
-    toggleTexture = false;
+    toggleTexture = 0.0f;
 
     for(int i=0; i < numberOfSquare; i++) {
         for(int j=0; j < numberOfSquare; j++) {
@@ -113,8 +113,7 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
 }
 
 void AssignementApplication::setTextureState() {
-    toggleTexture = !toggleTexture;
-    std::cout << toggleTexture << std::endl;
+    toggleTexture = (toggleTexture == 0.0f) ? 1.0f : 0.0f;
 }
 
 void AssignementApplication::move(Direction direction) {
@@ -151,82 +150,7 @@ void AssignementApplication::zoom(float zoomValue) {
 void AssignementApplication::select() {
      hasCubeSelected = true;
 }
-/*
-void AssignementApplication::moveCubeRequest() {
 
-    bool isNotEmpty = vertexArrayIdPerCoordinate[currentXSelected][currentYSelected] != -1;
-    std::array<int, 2> new_coordinate = {static_cast<int>(currentXSelected), static_cast<int>(currentYSelected)};
-
-    if (currentCubeSelected != -1) {
-
-        bool colorSelectedCube = colorVertexArrays[vertexArrayIdPerCoordinate[previousPosition[0]][previousPosition[1]]];
-
-        if(new_coordinate[0] == previousPosition[0] && new_coordinate[1] == previousPosition[1]) {
-
-            new_coordinate = previousPosition;
-
-            // In case we plan to use multiple vertexBuffer, we need to make sure
-            // the one with the coordinate and color is in the first position
-
-            auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(0);
-
-            auto cube = createUnit();
-
-            vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
-
-            float opacity = vertexArrayIdPerCoordinate[currentXSelected][currentYSelected] == -1 ? 1 : 0;
-            VBO_SelectionSquare->BufferSubData(
-                    0, sizeof(float) * selectionSquare.size(),
-                    createSelectionSquare(opacity).data());
-        }
-        else if (isNotEmpty) {
-
-            new_coordinate = previousPosition;
-
-            // In case we plan to use multiple vertexBuffer, we need to make sure
-            // the one with the coordinate and color is in the first position
-
-            auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(0);
-
-            auto cube = createUnit();
-
-            vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
-        }else {
-
-            // In case we plan to use multiple vertexBuffer, we need to make sure
-            // the one with the coordinate and color is in the first position
-            auto vertexBuffer = currentSelectedVertexArray->getVertexBuffer(0);
-            auto cube = createUnit();
-            vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
-
-            vertexArrayIdPerCoordinate[new_coordinate[0]][new_coordinate[1]] =
-                    vertexArrayIdPerCoordinate[previousPosition[0]][previousPosition[1]];
-
-            vertexArrayIdPerCoordinate[previousPosition[0]][previousPosition[1]] = -1;
-
-            float opacity = vertexArrayIdPerCoordinate[currentXSelected][currentYSelected] == -1 ? 1 : 0;
-            VBO_SelectionSquare->BufferSubData(
-                    0, sizeof(float) * selectionSquare.size(),
-                    createSelectionSquare(opacity).data());
-
-        }
-        previousPosition = {static_cast<int>(-1), static_cast<int>(-1)};
-        currentCubeSelected = -1;
-        currentSelectedVertexArray = nullptr;
-    }else if (isNotEmpty) {
-
-        auto current_cube = vertexArrays[vertexArrayIdPerCoordinate[currentXSelected][currentYSelected]];
-        currentCubeSelected = currentXSelected * numberOfSquare + currentYSelected;
-
-        auto vertexBuffer = current_cube->getVertexBuffer(0);
-        auto cube = createUnit();
-        vertexBuffer->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
-
-        currentSelectedVertexArray = current_cube;
-        previousPosition = new_coordinate;
-    }
-}
-*/
 std::vector<float> AssignementApplication::createSquare(float opacity) const {
 
     std::vector<float> newSelectionSquare = {
@@ -376,20 +300,20 @@ unsigned AssignementApplication::Run() {
     //--------------------------------------------------------------------------------------------------------------
     TextureManager* textureManager = TextureManager::GetInstance(); 
     // Load 2D texture for the grid
-    bool success2D = textureManager->LoadTexture2DRGBA("gridTexture", "resources/textures/floor_texture.jpg", 0, true);
+    bool success2D = textureManager->LoadTexture2DRGBA("gridTexture", "resources/textures/floor_texture.png", 0, true);
     if (!success2D) {
         std::cout << "2D Texture not loaded correctly." << std::endl;
     }
     // Give the textures to the shader
-    GLuint gridTextureUnit = textureManager->GetUnitByName("gridTexture"); 
+    GLuint gridTexture = textureManager->GetUnitByName("gridTexture"); 
 
     // Load Cube Map
     //TODO: loading the wood texture (all textures exept black-tile) does not work for the cubemap (whyever that might be).
-    bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/cube_texture.jpg", 0, true);
+    bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/cube_texture.png", 1, true);
     if (!successCube) {
         std::cout << "Cube Map not loaded correctly." << std::endl;
     }
-    GLuint unitTextureUnit = textureManager->GetUnitByName("cubeTexture"); 
+    GLuint unitTexture = textureManager->GetUnitByName("cubeTexture"); 
 
 
     glEnable(GL_MULTISAMPLE);
@@ -402,7 +326,7 @@ unsigned AssignementApplication::Run() {
     glm::mat4 unitModel = glm::mat4(1.0f);
     glm::mat4 squareModel = glm::mat4(1.0f);
     hasMoved = true;
-    bool setup = 1;
+    bool setup = true;
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -432,8 +356,8 @@ unsigned AssignementApplication::Run() {
         shaderGrid->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
         shaderGrid->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderGrid->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-        shaderUnit->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
-        shaderGrid->UploadUniform1i("uTexture", gridTextureUnit);
+        shaderGrid->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
+        shaderGrid->UploadUniform1i("u_Texture", gridTexture);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Grid); 
         
         //--------------------------------------------------------------------------------------------------------------
@@ -442,50 +366,86 @@ unsigned AssignementApplication::Run() {
         //
         // changes to the square only in the first iteration
         //--------------------------------------------------------------------------------------------------------------
-        if (setup)
+        // programm red team
+        for (unsigned int i = 0; i < numberOfSquare; i++)
         {
-            // helper
-            float sideLength = 2.0f / static_cast<float>(numberOfSquare);
-            float bottomRight = numberOfSquare * sideLength - 1;
+            for (unsigned int j = 0; j < 2; j++)
+            {
+                // helper
+                float sideLength = 2.0f / static_cast<float>(numberOfSquare);
+                float bottomRight = numberOfSquare * sideLength - 1;
 
-            // transforming and scaling units
-            unitModel = glm::mat4(1.0f);
-            float translationX = bottomRight - sideLength / 2;
-            float translationY = bottomRight + sideLength / 2 - sideLength * numberOfSquare;
-            unitModel = glm::translate(unitModel, glm::vec3(translationX, translationY, sideLength / 2));
-            float scaleValue = 0.6f;
-            glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleValue, 0.7, scaleValue));
-            unitModel *= scaleMatrix;
-            
-            setup = false;
+                // transforming and scaling units
+                unitModel = glm::mat4(1.0f);
+                float translationX = bottomRight - sideLength / 2 - sideLength * j;
+                float translationY = bottomRight + sideLength / 2 - sideLength * numberOfSquare + sideLength * i;
+                unitModel = glm::translate(unitModel, glm::vec3(translationX, translationY, sideLength / 2));
+                float scaleValue = 0.6f;
+                unitModel = glm::scale(unitModel, glm::vec3(scaleValue, 0.7, scaleValue));
+
+                // bind Unit Buffers, upload unit uniforms and draw unit
+                // [0,1]
+                float unitOpacity = 0.7;
+                // team color
+                glm::vec3 teamRed = glm::vec3(1.0, 0.0, 0.0);
+                glm::vec3 teamBlue = glm::vec3(0.0, 0.0, 1.0);
+                glm::vec3 uploadingColor = teamRed;
+
+                VAO_Unit->Bind();
+                shaderUnit->Bind();
+                shaderUnit->UploadUniformMatrix4fv("u_Model", unitModel);
+                shaderUnit->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
+                shaderUnit->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+                shaderUnit->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
+                shaderUnit->UploadUniformFloat1("u_Opacity", unitOpacity);
+                shaderUnit->UploadUniformFloat3("u_Color", uploadingColor);
+                shaderUnit->UploadUniform1i("CubeMap", unitTexture);
+                RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Unit);
+            }
         }
+        // programm blue team
+        for (unsigned int i = 0; i < numberOfSquare; i++)
+        {
+            for (unsigned int j = 0; j < 2; j++)
+            {
+                // helper
+                float sideLength = 2.0f / static_cast<float>(numberOfSquare);
+                float bottomRight = numberOfSquare * sideLength - 1;
 
-        // bind Unit Buffers, upload unit uniforms and draw unit
-        // [0,1]
-        float unitOpacity = 1;
-        // team color
-        glm::vec3 teamRed = glm::vec3(1.0, 0.0, 0.0);
-        glm::vec3 teamBlue = glm::vec3(0.0, 0.0, 1.0);
-        glm::vec3 uploadingColor = teamRed;
+                // transforming and scaling units
+                unitModel = glm::mat4(1.0f);
+                float translationX = bottomRight - sideLength / 2 - sideLength * (numberOfSquare - 1) + sideLength * j;
+                float translationY = bottomRight + sideLength / 2 - sideLength * numberOfSquare + sideLength * i;
+                unitModel = glm::translate(unitModel, glm::vec3(translationX, translationY, sideLength / 2));
+                float scaleValue = 0.6f;
+                unitModel = glm::scale(unitModel, glm::vec3(scaleValue, 0.7, scaleValue));
 
-        VAO_Unit->Bind();
-        shaderUnit->Bind();
-        shaderUnit->UploadUniformMatrix4fv("u_Model", unitModel);
-        shaderUnit->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
-        shaderUnit->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-        shaderUnit->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
-        shaderUnit->UploadUniformFloat1("u_Opacity", unitOpacity); 
-        shaderUnit->UploadUniformFloat3("u_Color", uploadingColor);
-        shaderUnit->UploadUniform1i("CubeMap", unitTextureUnit);
-        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Unit);
+                // bind Unit Buffers, upload unit uniforms and draw unit
+                // [0,1]
+                float unitOpacity = 0.7;
+                // team color
+                glm::vec3 teamRed = glm::vec3(1.0, 0.0, 0.0);
+                glm::vec3 teamBlue = glm::vec3(0.0, 0.0, 1.0);
+                glm::vec3 uploadingColor = teamBlue;
 
+                VAO_Unit->Bind();
+                shaderUnit->Bind();
+                shaderUnit->UploadUniformMatrix4fv("u_Model", unitModel);
+                shaderUnit->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
+                shaderUnit->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+                shaderUnit->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
+                shaderUnit->UploadUniformFloat1("u_Opacity", unitOpacity);
+                shaderUnit->UploadUniformFloat3("u_Color", uploadingColor);
+                shaderUnit->UploadUniform1i("CubeMap", unitTexture);
+                RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Unit);
+            }
+        }
         //--------------------------------------------------------------------------------------------------------------
         //
         // square processing
         //
         //--------------------------------------------------------------------------------------------------------------
         if (hasMoved) {
-
             // helper
             float sideLength = 2.0f / static_cast<float>(numberOfSquare);
             float bottomRight = numberOfSquare * sideLength - 1;

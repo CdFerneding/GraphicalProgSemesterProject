@@ -299,7 +299,7 @@ unsigned Lab4Application::Run() {
         shaderGrid->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix()); 
         shaderGrid->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderGrid->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-        shaderGrid->UploadUniform1i("uTexture", gridTextureUnit);
+        shaderGrid->UploadUniform1i("u_Texture", gridTextureUnit);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Grid);
 
         // handle cube rotation, translations with the model matrix

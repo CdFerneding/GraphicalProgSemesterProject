@@ -32,7 +32,7 @@ private:
     bool hasMoved; // True when the player is moving the selection square
     bool hasCameraChanged; // True when the player is changing the camera rotation / zoom
     bool hasCubeSelected; // true if a cube is currently selected
-    bool toggleTexture; // toggle functionality to activate/deactivate textures and blending
+    float toggleTexture; // toggle functionality to activate/deactivate textures and blending
 
     std::array<std::shared_ptr<VertexArray>, 8*8> cubes= {nullptr}; // A list of vertex array containing the cubes. To get a specific one, you can use the vertexArrayIdPerCoordinate
 
