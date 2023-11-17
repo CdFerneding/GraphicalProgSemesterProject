@@ -406,8 +406,8 @@ unsigned AssignementApplication::Run() {
     auto* shaderSquare = newShader(VS_Square, FS_Square);
     shaderSquare->Bind();
     // cube shader
-    auto* shaderCube = new Shader(VS_Unit, FS_Unit);
-    shaderCube->Bind();
+    auto* shaderUnit = new Shader(VS_Unit, FS_Unit);
+    shaderUnit->Bind();
 
 
     //--------------------------------------------------------------------------------------------------------------
@@ -542,28 +542,33 @@ unsigned AssignementApplication::Run() {
         */
 
         // bind Square Buffers and draw square
-        VAO_Cube->Bind();
-        shaderCube->Bind();
-        shaderCube->UploadUniformMatrix4fv("u_Model", model); 
-        shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
-        shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-        shaderCube->UploadUniformFloat4("u_CubeColor", cubeColor);
-        shaderCube->UploadUniform1i("CubeMap", cubeTextureUnit);
-        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube);
+        VAO_Unit->Bind();
+        shaderUnit->Bind();
+        shaderUnit->UploadUniformMatrix4fv("u_Model", model);
+        shaderUnit->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
+        shaderUnit->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+        shaderUnit->UploadUniformFloat4("u_CubeColor", cubeColor);
+        shaderUnit->UploadUniform1i("CubeMap", cubeTextureUnit);
+        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Unit);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // Cleanup of Shader and Buffers
-    shader->Unbind();
-    VAO_Grid->Unbind();
-    VAO_SelectionSquare->Unbind();
+    // Cleanup Grid Buffers
+    shaderGrid->~Shader();
+    VAO_Grid->~VertexArray();
+    VBO_Grid->~VertexBuffer();
+    IBO_Grid->~IndexBuffer();
 
-    for(const auto& cube : cubes) {
-        cube->Unbind();
-    }
+    // Cleanup Cube Buffers
+    shaderCube->~Shader();
+    VAO_Cube->~VertexArray();
+    VBO_Grid->~VertexBuffer();
+    IBO_Cube->~IndexBuffer();
+
+    // Cleanup Square Buffers
 
     return stop();
 }
