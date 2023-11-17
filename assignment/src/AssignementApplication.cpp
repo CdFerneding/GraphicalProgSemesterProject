@@ -28,12 +28,11 @@ AssignementApplication::AssignementApplication(const std::string& name, const st
     currentYSelected = 0;
     currentCubeSelected = -1;
 
-    hasMoved = false;
     hasCameraChanged = false;
-    hasCubeSelected = false;
 
-    previousPosition = {-1, -1};
-    previousPositionSelector = {0, 0};
+    hasMoved = false;
+    isUnitSelected = false;
+    moveUnitFrom = {-1, -1};
 
     shader = nullptr;
 
@@ -85,9 +84,6 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
             break;
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
-            break;
-        case GLFW_KEY_ENTER:
-            getAssignementApplication()->select();
             break;
         case GLFW_KEY_P:
             getAssignementApplication()->zoom(1.0f);
@@ -147,17 +143,15 @@ void AssignementApplication::zoom(float zoomValue) {
     hasCameraChanged = true;
 }
 
-void AssignementApplication::select() {
-     hasCubeSelected = true;
-}
-
 std::vector<float> AssignementApplication::createSquare(float opacity) const {
+    float sideLength = 2.0f / static_cast<float>(numberOfSquare);
+    float halfSideLength = sideLength * 0.5f;
 
     std::vector<float> newSelectionSquare = {
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0001, 0, 1, 0, opacity,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)), 0.0001, 0, 1, 0, opacity,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected + 1)),  0.0001, 0, 1, 0, opacity,
-            1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected + 1)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0001, 0, 1, 0, opacity
+            -halfSideLength, -halfSideLength, 0.0f, 0.0f, 1.0f, 0.0f, opacity,
+            -halfSideLength, +halfSideLength, 0.0f, 0.0f, 1.0f, 0.0f, opacity,
+            +halfSideLength, +halfSideLength, 0.0f, 0.0f, 1.0f, 0.0f, opacity,
+            +halfSideLength, -halfSideLength, 0.0f, 0.0f, 1.0f, 0.0f, opacity
     };
 
     return newSelectionSquare;
@@ -170,13 +164,13 @@ std::vector<float> AssignementApplication::createUnit() const {
     // cube centered around origin in relation to the gridSquareSize
     std::vector<float> selectionCube = {
         -halfSideLength, -halfSideLength, -halfSideLength,
-        -halfSideLength, -halfSideLength + sideLength, -halfSideLength,
-        -halfSideLength + sideLength, -halfSideLength + sideLength, -halfSideLength,
-        -halfSideLength + sideLength, -halfSideLength, -halfSideLength,
+        -halfSideLength, halfSideLength, -halfSideLength,
+        +halfSideLength, halfSideLength, -halfSideLength,
+        halfSideLength, -halfSideLength, -halfSideLength,
         -halfSideLength, -halfSideLength, halfSideLength,
-        -halfSideLength, -halfSideLength + sideLength, halfSideLength,
-        -halfSideLength + sideLength, -halfSideLength + sideLength, halfSideLength,
-        -halfSideLength + sideLength, -halfSideLength, halfSideLength,
+        -halfSideLength, halfSideLength, halfSideLength,
+        halfSideLength, halfSideLength, halfSideLength,
+        halfSideLength, -halfSideLength, halfSideLength,
     };
     return selectionCube;
 }
@@ -186,7 +180,6 @@ unsigned AssignementApplication::Run() {
 
     current_application = this;
     hasCameraChanged = false;
-    hasMoved = false;
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -196,7 +189,7 @@ unsigned AssignementApplication::Run() {
     auto gridVertices = GeometricTools::UnitGridGeometry2DWTCoords(numberOfSquare);
     auto gridIndices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
 
-    auto squareVertices = createSquare(1);
+    auto squareVertices = createSquare(1.0f);
     auto squareIndices = GeometricTools::TopologySquare2D;
 
     auto unitVertices = createUnit();
@@ -322,12 +315,6 @@ unsigned AssignementApplication::Run() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
 
-    // Renderloop variables
-    glm::mat4 unitModel = glm::mat4(1.0f);
-    glm::mat4 squareModel = glm::mat4(1.0f);
-    hasMoved = true;
-    bool setup = true;
-
     //--------------------------------------------------------------------------------------------------------------
     //
     // start execution
@@ -336,6 +323,21 @@ unsigned AssignementApplication::Run() {
     // for semi-transparancy (blending) to work opaque objects have to be drawn first!
     // Also OpenGL Depth-Test functionality might interfere
     //--------------------------------------------------------------------------------------------------------------
+    // Renderloop variables
+    glm::mat4 unitModel = glm::mat4(1.0f);
+    glm::mat4 squareModel = glm::mat4(1.0f);
+
+    hasMoved = true;
+    bool isUnitSelected = false;
+    bool setup = true; // for units in first iteration
+
+    // Define a struct to store information about each unit
+    struct UnitInfo {
+        glm::vec3 previousColor;
+        glm::vec3 currentColor;
+        glm::vec2 currentPosition;
+    };
+    std::vector<UnitInfo> unitInfoVector; 
     while (!glfwWindowShouldClose(window))
     {
 
@@ -366,80 +368,100 @@ unsigned AssignementApplication::Run() {
         //
         // changes to the square only in the first iteration
         //--------------------------------------------------------------------------------------------------------------
-        // programm red team
-        for (unsigned int i = 0; i < numberOfSquare; i++)
-        {
-            for (unsigned int j = 0; j < 2; j++)
-            {
-                // helper
-                float sideLength = 2.0f / static_cast<float>(numberOfSquare);
-                float bottomRight = numberOfSquare * sideLength - 1;
+        // initialization
+        if (setup) {
+            // init red team
+            for (unsigned int i = 0; i < numberOfSquare; i++) {
+                for (unsigned int j = 0; j < 2; j++) {
+                    UnitInfo unitInfo;
+                    unitInfo.currentColor = glm::vec3(1.0, 0.0, 0.0); // red
+                    unitInfo.currentPosition = glm::vec2(j, i);
+                    unitInfoVector.push_back(unitInfo);
+                }
+            }
+            // init blue team
+            for (unsigned int i = 0; i < numberOfSquare; i++) {
+                for (unsigned int j = 0; j < 2; j++) {
+                    UnitInfo unitInfo;
+                    unitInfo.currentColor = glm::vec3(0.0, 0.0, 1.0); // blue
+                    unitInfo.currentPosition = glm::vec2(numberOfSquare - 1 - j, i);
+                    unitInfoVector.push_back(unitInfo);
+                }
+            }
+            setup = false;
+        }
+        bool isOccupied = false;
 
-                // transforming and scaling units
-                unitModel = glm::mat4(1.0f);
-                float translationX = bottomRight - sideLength / 2 - sideLength * j;
-                float translationY = bottomRight + sideLength / 2 - sideLength * numberOfSquare + sideLength * i;
-                unitModel = glm::translate(unitModel, glm::vec3(translationX, translationY, sideLength / 2));
-                float scaleValue = 0.6f;
-                unitModel = glm::scale(unitModel, glm::vec3(scaleValue, 0.7, scaleValue));
+        // update unitInfoVector.currentPosition if a square registered "Enter" / "isUnitSelected" / unit is being moved
+        if (isUnitSelected) {
+            for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
+                if (unitInfoVector[unitIndex].currentPosition[0] == currentXSelected && unitInfoVector[unitIndex].currentPosition[1] == currentYSelected) {
+                    isOccupied = true;
+                }
+            }
+            isUnitSelected = false;
+            // only move if target square is empty
+            if (!isOccupied) {
+                // find the correct unit that has been moved
+                for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
+                    // the the "moveunitfrom" position equals one unit.currentPosition we can move it to where the square currently is
+                    if (unitInfoVector[unitIndex].currentPosition[0] == moveUnitFrom[0] && unitInfoVector[unitIndex].currentPosition[1] == moveUnitFrom[1]) {
+                        std::cout << "cube moved from: " << unitInfoVector[unitIndex].currentPosition[0] << ", " << unitInfoVector[unitIndex].currentPosition[1] << " to: " << currentXSelected << ", " << currentYSelected << std::endl;
+                        unitInfoVector[unitIndex].currentPosition = glm::vec2(currentXSelected, currentYSelected);
+                        unitInfoVector[unitIndex].currentColor = unitInfoVector[unitIndex].previousColor;
 
-                // bind Unit Buffers, upload unit uniforms and draw unit
-                // [0,1]
-                float unitOpacity = 0.7;
-                // team color
-                glm::vec3 teamRed = glm::vec3(1.0, 0.0, 0.0);
-                glm::vec3 teamBlue = glm::vec3(0.0, 0.0, 1.0);
-                glm::vec3 uploadingColor = teamRed;
-
-                VAO_Unit->Bind();
-                shaderUnit->Bind();
-                shaderUnit->UploadUniformMatrix4fv("u_Model", unitModel);
-                shaderUnit->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
-                shaderUnit->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-                shaderUnit->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
-                shaderUnit->UploadUniformFloat1("u_Opacity", unitOpacity);
-                shaderUnit->UploadUniformFloat3("u_Color", uploadingColor);
-                shaderUnit->UploadUniform1i("CubeMap", unitTexture);
-                RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Unit);
+                    }
+                }
             }
         }
-        // programm blue team
-        for (unsigned int i = 0; i < numberOfSquare; i++)
-        {
-            for (unsigned int j = 0; j < 2; j++)
-            {
-                // helper
-                float sideLength = 2.0f / static_cast<float>(numberOfSquare);
-                float bottomRight = numberOfSquare * sideLength - 1;
 
-                // transforming and scaling units
-                unitModel = glm::mat4(1.0f);
-                float translationX = bottomRight - sideLength / 2 - sideLength * (numberOfSquare - 1) + sideLength * j;
-                float translationY = bottomRight + sideLength / 2 - sideLength * numberOfSquare + sideLength * i;
-                unitModel = glm::translate(unitModel, glm::vec3(translationX, translationY, sideLength / 2));
-                float scaleValue = 0.6f;
-                unitModel = glm::scale(unitModel, glm::vec3(scaleValue, 0.7, scaleValue));
-
-                // bind Unit Buffers, upload unit uniforms and draw unit
-                // [0,1]
-                float unitOpacity = 0.7;
-                // team color
-                glm::vec3 teamRed = glm::vec3(1.0, 0.0, 0.0);
-                glm::vec3 teamBlue = glm::vec3(0.0, 0.0, 1.0);
-                glm::vec3 uploadingColor = teamBlue;
-
-                VAO_Unit->Bind();
-                shaderUnit->Bind();
-                shaderUnit->UploadUniformMatrix4fv("u_Model", unitModel);
-                shaderUnit->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
-                shaderUnit->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-                shaderUnit->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
-                shaderUnit->UploadUniformFloat1("u_Opacity", unitOpacity);
-                shaderUnit->UploadUniformFloat3("u_Color", uploadingColor);
-                shaderUnit->UploadUniform1i("CubeMap", unitTexture);
-                RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Unit);
+        // update unitColor when enter is hit on a cube
+        if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && isOccupied) {
+            for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
+                // the the "moveunitfrom" position equals one unit.currentPosition we can move it to where the square currently is
+                if (unitInfoVector[unitIndex].currentPosition[0] == moveUnitFrom[0] && unitInfoVector[unitIndex].currentPosition[1] == moveUnitFrom[1]) {
+                    unitInfoVector[unitIndex].previousColor = unitInfoVector[unitIndex].currentColor; 
+                    unitInfoVector[unitIndex].currentColor = glm::vec3(0.0f, 1.0f, 0.0f);
+                    isUnitSelected = true;
+                }
             }
         }
+
+        // draw all 32 cubes according to their currentPosition when
+        for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
+            // unit information
+            glm::vec3 currentUnitColor = unitInfoVector[unitIndex].currentColor;
+            glm::vec2 currentPosition = unitInfoVector[unitIndex].currentPosition;
+
+            // helper
+            float sideLength = 2.0f / static_cast<float>(numberOfSquare);
+            float targetXOffset = sideLength / 2 + 3 * sideLength;
+            float targetYOffset = sideLength / 2 - 4 * sideLength;
+
+            // transforming and scaling units
+            unitModel = glm::mat4(1.0f);
+            float translationX = targetXOffset - sideLength * currentPosition[0];
+            float translationY = targetYOffset + sideLength * currentPosition[1];
+            unitModel = glm::translate(unitModel, glm::vec3(translationX, translationY, sideLength / 2));
+            unitModel = glm::scale(unitModel, glm::vec3(0.56, 0.7, 0.56));
+
+            // bind Unit Buffers, upload unit uniforms and draw unit
+            // range: [0,1]
+            float unitOpacity = 0.7;
+            
+            VAO_Unit->Bind();
+            shaderUnit->Bind();
+            shaderUnit->UploadUniformMatrix4fv("u_Model", unitModel);
+            shaderUnit->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
+            shaderUnit->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+            shaderUnit->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
+            shaderUnit->UploadUniformFloat1("u_Opacity", unitOpacity);
+            shaderUnit->UploadUniformFloat3("u_Color", currentUnitColor);
+            shaderUnit->UploadUniform1i("CubeMap", unitTexture);
+            RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Unit);
+            }
+        
+
         //--------------------------------------------------------------------------------------------------------------
         //
         // square processing
@@ -448,14 +470,16 @@ unsigned AssignementApplication::Run() {
         if (hasMoved) {
             // helper
             float sideLength = 2.0f / static_cast<float>(numberOfSquare);
+            // HINT: board position (0,0) is the bottom Right
             float bottomRight = numberOfSquare * sideLength - 1;
             
             // translating square
-            glm::mat4 squareModel = glm::mat4(1.0f);
-            float translationX = bottomRight - currentXSelected * sideLength - sideLength / 2;
-            float translationY = bottomRight + currentYSelected * sideLength + sideLength / 2 - sideLength * numberOfSquare;
-            squareModel = glm::translate(squareModel, glm::vec3(translationX, translationY, sideLength / 2 + 0.01f));
-
+            squareModel = glm::mat4(1.0f);
+            // HINT: from our perspective the x movement works inverted in relation to the board coordinates
+            float translationX = bottomRight - sideLength/2 - currentXSelected * sideLength;
+            float translationY = bottomRight + sideLength / 2 - sideLength * numberOfSquare + currentYSelected * sideLength;
+            squareModel = glm::translate(squareModel, glm::vec3(translationX, translationY, 0.001));
+            
             hasMoved = false;
         }
 

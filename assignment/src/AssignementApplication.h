@@ -31,7 +31,6 @@ private:
 
     bool hasMoved; // True when the player is moving the selection square
     bool hasCameraChanged; // True when the player is changing the camera rotation / zoom
-    bool hasCubeSelected; // true if a cube is currently selected
     float toggleTexture; // toggle functionality to activate/deactivate textures and blending
 
     std::array<std::shared_ptr<VertexArray>, 8*8> cubes= {nullptr}; // A list of vertex array containing the cubes. To get a specific one, you can use the vertexArrayIdPerCoordinate
@@ -44,7 +43,7 @@ private:
 
     std::shared_ptr<VertexArray> currentSelectedVertexArray; // The vertex array of the selected cube
 
-    std::array<int, 2> previousPosition; // Contain the previous position of the selected cube, (-1,-1) otherwise
+    std::array<int, 2> moveUnitFrom; // Contain the previous position of the selected cube, (-1,-1) otherwise
     std::array<unsigned, 2> previousPositionSelector; // The previous position of the selection square
 
     std::shared_ptr<VertexBuffer> VBO_SelectionSquare; // The vertex buffer of the selection square
