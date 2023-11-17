@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.15)
 # Declare a new project named 'tuto_lab1_glfw'. This sets various variables
 # related to the project and provides a context for the following CMake
 # commands.
-project(assignement)
+project(assignment)
 # Add an executable target named 'tuto_lab1_glfw' that is built from the source
 # file 'main.cpp'. This means that CMake will generate build rules to compile
 # 'main.cpp' and link it into an executable program named 'tuto_lab1_glfw'.
