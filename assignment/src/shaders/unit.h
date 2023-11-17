@@ -1,6 +1,6 @@
 #include <string>
-#ifndef PROG2002_SHADERCUBE_H
-#define PROG2002_SHADERCUBE_H
+#ifndef PROG2002_UNIT_H
+#define PROG2002_UNIT_H
 
 // Vertex and fragment shader source code
 const std::string VS_Unit = R"(
@@ -12,10 +12,11 @@ const std::string VS_Unit = R"(
     uniform mat4 u_Model;
     uniform mat4 u_View;
     uniform mat4 u_Projection;
+    uniform float u_Scale;
 
     void main()
-    {
-        TexCoords = position;
+    {;
+        TexCoords = position * u_Scale;
         gl_Position = u_Projection * u_View * u_Model * vec4(position, 1.0);
     }
 )";
@@ -26,18 +27,23 @@ const std::string FS_Unit = R"(
     in vec3 TexCoords;
     
     uniform samplerCube CubeMap;
-    uniform vec4 u_CubeColor;
+    uniform vec3 u_Color;
+    uniform float u_Opacity;
+    uniform float u_TextureState;
 
     out vec4 color;
     
     void main()
     {
-        // Sample the texture using the texture coordinates
-        vec4 texColor = texture(CubeMap, TexCoords);
+        if(u_TextureState) {
+            // Sample the texture using the texture coordinates
+            vec4 texColor = texture(CubeMap, TexCoords);
         
-        color = mix(vec4(texColor.rgb, 0.5), u_CubeColor, 0.3);
+            color = mix(vec4(texColor.rgb, u_Opacity), u_Color, 0);
+        } else {
+            color = vec4(u_Color, u_Opacity);
+        }
     }
 )";
 
-
-#endif //PROG2002_SHADERCUBE_H
+#endif //PROG2002_UNIT_H

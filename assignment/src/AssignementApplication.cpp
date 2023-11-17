@@ -2,7 +2,7 @@
 // shader objects
 #include "shaders/grid.h"
 #include "shaders/square.h"
-#include "shaders/cube.h"
+#include "shaders/unit.h"
 // rendering framework
 #include "./../GeometricTools/GeometricTools.h"
 #include "../../framework/Rendering/IndexBuffer.h"
@@ -11,6 +11,7 @@
 #include "../../framework/Rendering/Shader.h"
 #include "OrthographicCamera.h"
 #include "PerspectiveCamera.h"
+#include "./../Rendering/TextureManager.h"
 #include <RenderCommands.h>
 // libraries
 #include <glm/glm.hpp>
@@ -35,6 +36,8 @@ AssignementApplication::AssignementApplication(const std::string& name, const st
     previousPositionSelector = {0, 0};
 
     shader = nullptr;
+
+    toggleTexture = false;
 
     for(int i=0; i < numberOfSquare; i++) {
         for(int j=0; j < numberOfSquare; j++) {
@@ -99,11 +102,21 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
             getAssignementApplication()->rotate(-5);
             // counter-clockwise rotation
             break;
+        // toggle texturing/blending
+        case GLFW_KEY_T:
+            getAssignementApplication()->setTextureState();
+            break;
         default:
             break;
         }
     }
 }
+
+void AssignementApplication::setTextureState() {
+    toggleTexture = !toggleTexture;
+    std::cout << toggleTexture << std::endl;
+}
+
 void AssignementApplication::move(Direction direction) {
     hasMoved = true;
     switch (direction) {
@@ -214,7 +227,7 @@ void AssignementApplication::moveCubeRequest() {
     }
 }
 */
-std::vector<float> AssignementApplication::createSelectionSquare(float opacity) const {
+std::vector<float> AssignementApplication::createSquare(float opacity) const {
 
     std::vector<float> newSelectionSquare = {
             1 - (2.0f / (float)numberOfSquare) * (float(currentXSelected)), -1 + (2.0f / (float)numberOfSquare) * (float(currentYSelected)), 0.0001, 0, 1, 0, opacity,
@@ -259,8 +272,8 @@ unsigned AssignementApplication::Run() {
     auto gridVertices = GeometricTools::UnitGridGeometry2DWTCoords(numberOfSquare);
     auto gridIndices = GeometricTools::UnitGrid2DTopology(numberOfSquare);
 
-    auto selectionSquareVertices = createSelectionSquare(0);
-    auto selectionSquareIndices = GeometricTools::TopologySquare2D;
+    auto squareVertices = createSquare(1);
+    auto squareIndices = GeometricTools::TopologySquare2D;
 
     auto unitVertices = createUnit();
     auto unitIndices = GeometricTools::CubeTopology;
@@ -280,7 +293,7 @@ unsigned AssignementApplication::Run() {
         }));
 
     // selectionSquareLayout
-    auto selectionSquareLayout = std::make_shared<BufferLayout>(BufferLayout({
+    auto squareLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false}, 
         {ShaderDataType::Float4, "color", false},
         }));
@@ -306,15 +319,15 @@ unsigned AssignementApplication::Run() {
     VAO_Grid->SetIndexBuffer(IBO_Grid); 
 
     // VAO SelectionSquare
-    auto VAO_SelectionSquare = std::make_shared<VertexArray>();
-    VAO_SelectionSquare->Bind(); 
-    auto VBO_SelectionSquare = std::make_shared<VertexBuffer>(selectionSquareVertices.data(),
-        sizeof(float) * selectionSquareVertices.size()); 
-    VBO_SelectionSquare->SetLayout(*selectionSquareLayout); 
-    VAO_SelectionSquare->AddVertexBuffer(VBO_SelectionSquare); 
-    auto IBO_SelectionSquare = std::make_shared<IndexBuffer>(selectionSquareIndices.data(), 
-        static_cast<GLsizei>(selectionSquareIndices.size()));
-    VAO_SelectionSquare->SetIndexBuffer(IBO_SelectionSquare);
+    auto VAO_Square = std::make_shared<VertexArray>();
+    VAO_Square->Bind(); 
+    auto VBO_Square = std::make_shared<VertexBuffer>(squareVertices.data(),
+        sizeof(float) * squareVertices.size()); 
+    VBO_Square->SetLayout(*squareLayout); 
+    VAO_Square->AddVertexBuffer(VBO_Square); 
+    auto IBO_Square = std::make_shared<IndexBuffer>(squareIndices.data(), 
+        static_cast<GLsizei>(squareIndices.size()));
+    VAO_Square->SetIndexBuffer(IBO_Square);
 
     // VAO Unit
     auto VAO_Unit = std::make_shared<VertexArray>();
@@ -326,73 +339,7 @@ unsigned AssignementApplication::Run() {
     auto IBO_Unit = std::make_shared<IndexBuffer>(unitIndices.data(),
         static_cast<GLsizei>(unitIndices.size()));
     VAO_Unit->SetIndexBuffer(IBO_Unit);
-    /*
-    for(int i=0; i < numberOfSquare * numberOfSquare; i++) {
-        cubes[i] = nullptr;
-    }
 
-    int count = 0;
-
-    std::vector<std::vector<float>> arrayColor = {
-            {1.0f, 0.0f, 0.0f}, //red
-            {0.0f, 0.0f, 1.0f} //blue
-    };
-
-    // For each of the 2 type of color (red and blue)
-    for (auto color : arrayColor) {
-
-        unsigned x_coordinate = color[2]==1 ? numberOfSquare - 1 : 0;
-        unsigned y_coordinate = 0;
-
-        for (int i = 0; i < numberOfSquare * 2; i++) {
-
-            
-            // Fix when you launch the program so the selected cube is green
-             
-                std::vector<float> cube;
-
-                if (color[0] == arrayColor[0][0] && i == 0) {
-                    cube = createUnit(0, 1, 0, x_coordinate, y_coordinate);
-                } else {
-                    cube = createUnit(color[0], color[1], color[2], x_coordinate, y_coordinate);
-                }
-
-
-            auto vertexArrayCube = std::make_shared<VertexArray>();
-
-            auto indicesCube = GeometricTools::CubeTopology;
-
-            auto indexBufferCube = std::make_shared<IndexBuffer>(
-                    indicesCube.data(), indicesCube.size());
-
-            auto vertexBufferCube = std::make_shared<VertexBuffer>(
-                    cube.data(), sizeof(float) * cube.size());
-
-            vertexBufferCube->SetLayout(*gridBufferLayout);
-
-            vertexArrayCube->AddVertexBuffer(vertexBufferCube);
-            vertexArrayCube->SetIndexBuffer(indexBufferCube);
-            vertexArrayCube->Bind();
-
-            cubes[x_coordinate * numberOfSquare + y_coordinate] = vertexArrayCube;
-
-            vertexArrayIdPerCoordinate[x_coordinate][y_coordinate] = count++;
-            vertexArrays.push_back(vertexArrayCube);
-            colorVertexArrays.push_back(color[2]==1);
-
-            y_coordinate++;
-            if(y_coordinate>=numberOfSquare){
-                if(x_coordinate > 2) {
-                    y_coordinate = 0;
-                    x_coordinate--;
-                }else {
-                    y_coordinate = 0;
-                    x_coordinate++;
-                }
-            }
-        }
-    }
-    */
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -403,7 +350,7 @@ unsigned AssignementApplication::Run() {
     auto* shaderGrid = new Shader(VS_Grid, FS_Grid);
     shaderGrid->Bind();
     // square shader
-    auto* shaderSquare = newShader(VS_Square, FS_Square);
+    auto* shaderSquare = new Shader(VS_Square, FS_Square);
     shaderSquare->Bind();
     // cube shader
     auto* shaderUnit = new Shader(VS_Unit, FS_Unit);
@@ -442,7 +389,7 @@ unsigned AssignementApplication::Run() {
     if (!successCube) {
         std::cout << "Cube Map not loaded correctly." << std::endl;
     }
-    GLuint cubeTextureUnit = textureManager->GetUnitByName("cubeTexture"); 
+    GLuint unitTextureUnit = textureManager->GetUnitByName("cubeTexture"); 
 
 
     glEnable(GL_MULTISAMPLE);
@@ -452,8 +399,10 @@ unsigned AssignementApplication::Run() {
     glBlendEquation(GL_FUNC_ADD);
 
     // Renderloop variables
-    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 unitModel = glm::mat4(1.0f);
+    glm::mat4 squareModel = glm::mat4(1.0f);
     hasMoved = true;
+    bool setup = 1;
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -473,88 +422,101 @@ unsigned AssignementApplication::Run() {
         // handle input
         glfwSetKeyCallback(window, AssignementApplication::key_callback);
 
-        // bind grid buffer, upload grid uniforms, draw grid
+        //--------------------------------------------------------------------------------------------------------------
+        //
+        // grid processing
+        //
+        //--------------------------------------------------------------------------------------------------------------
         VAO_Grid->Bind();
         shaderGrid->Bind();
         shaderGrid->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
         shaderGrid->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderGrid->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+        shaderUnit->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
         shaderGrid->UploadUniform1i("uTexture", gridTextureUnit);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Grid); 
+        
+        //--------------------------------------------------------------------------------------------------------------
+        //
+        // unit processing
+        //
+        // changes to the square only in the first iteration
+        //--------------------------------------------------------------------------------------------------------------
+        if (setup)
+        {
+            // helper
+            float sideLength = 2.0f / static_cast<float>(numberOfSquare);
+            float bottomRight = numberOfSquare * sideLength - 1;
 
-        /*
+            // transforming and scaling units
+            unitModel = glm::mat4(1.0f);
+            float translationX = bottomRight - sideLength / 2;
+            float translationY = bottomRight + sideLength / 2 - sideLength * numberOfSquare;
+            unitModel = glm::translate(unitModel, glm::vec3(translationX, translationY, sideLength / 2));
+            float scaleValue = 0.6f;
+            glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleValue, 0.7, scaleValue));
+            unitModel *= scaleMatrix;
+            
+            setup = false;
+        }
+
+        // bind Unit Buffers, upload unit uniforms and draw unit
+        // [0,1]
+        float unitOpacity = 1;
+        // team color
+        glm::vec3 teamRed = glm::vec3(1.0, 0.0, 0.0);
+        glm::vec3 teamBlue = glm::vec3(0.0, 0.0, 1.0);
+        glm::vec3 uploadingColor = teamRed;
+
+        VAO_Unit->Bind();
+        shaderUnit->Bind();
+        shaderUnit->UploadUniformMatrix4fv("u_Model", unitModel);
+        shaderUnit->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
+        shaderUnit->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+        shaderUnit->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
+        shaderUnit->UploadUniformFloat1("u_Opacity", unitOpacity); 
+        shaderUnit->UploadUniformFloat3("u_Color", uploadingColor);
+        shaderUnit->UploadUniform1i("CubeMap", unitTextureUnit);
+        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Unit);
+
+        //--------------------------------------------------------------------------------------------------------------
+        //
+        // square processing
+        //
+        //--------------------------------------------------------------------------------------------------------------
         if (hasMoved) {
 
-            float opacity = vertexArrayIdPerCoordinate[currentXSelected][currentYSelected] == -1 ? 1 : 0;
-            VBO_SelectionSquare->BufferSubData(0, sizeof(float) * selectionSquareVertices.size(),
-                                                       createSelectionSquare(opacity).data());
+            // helper
+            float sideLength = 2.0f / static_cast<float>(numberOfSquare);
+            float bottomRight = numberOfSquare * sideLength - 1;
+            
+            // translating square
+            glm::mat4 squareModel = glm::mat4(1.0f);
+            float translationX = bottomRight - currentXSelected * sideLength - sideLength / 2;
+            float translationY = bottomRight + currentYSelected * sideLength + sideLength / 2 - sideLength * numberOfSquare;
+            squareModel = glm::translate(squareModel, glm::vec3(translationX, translationY, sideLength / 2 + 0.01f));
 
-            if(opacity == 0 && !(previousPosition[0] == currentXSelected && previousPosition[1] == currentYSelected)) {
-
-                //Update the current cube and change his color to green
-
-                auto current_cube = vertexArrays[vertexArrayIdPerCoordinate[currentXSelected][currentYSelected]];
-                auto vertexBufferSelected = current_cube->getVertexBuffer(0);
-
-                auto cube = createUnit(0.0f, 1.0f, 0.0f, currentXSelected, currentYSelected);
-                vertexBufferSelected->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
-
-            }
-
-            if(vertexArrayIdPerCoordinate[previousPositionSelector[0]][previousPositionSelector[1]] != -1 &&
-                !(previousPositionSelector[0] == previousPosition[0] && previousPosition[1] == previousPositionSelector[1]))
-            {
-
-                auto previous_cube = vertexArrays[vertexArrayIdPerCoordinate[previousPositionSelector[0]][previousPositionSelector[1]]];
-                auto vertexBufferSelected = previous_cube->getVertexBuffer(0);
-
-                float r = colorVertexArrays[vertexArrayIdPerCoordinate[previousPositionSelector[0]][previousPositionSelector[1]]] ? 0 : 1;
-                float b = colorVertexArrays[vertexArrayIdPerCoordinate[previousPositionSelector[0]][previousPositionSelector[1]]] ? 1 : 0;
-
-                auto cube = createUnit(r, 0.0f, b, previousPositionSelector[0], previousPositionSelector[1]);
-                vertexBufferSelected->BufferSubData(0, sizeof(float) * cube.size(), cube.data());
-            }
-
-            previousPositionSelector[0] = currentXSelected;
-            previousPositionSelector[1] = currentYSelected;
             hasMoved = false;
         }
 
-        if(hasCubeSelected) {
-            moveCubeRequest();
-            hasCubeSelected = false;
-        }
-
-        if(hasCameraChanged) {
-            shader->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
-            shader->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-            shader->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix());
-            hasCameraChanged = false;
-        }
-
-        for(const auto& cube : cubes) {
-            if(cube!=nullptr)
-                RenderCommands::DrawIndex(
-                        GL_TRIANGLES,
-                        cube
-                );
-        }
-        */
-
-        // bind Square Buffers and draw square
-        VAO_Unit->Bind();
-        shaderUnit->Bind();
-        shaderUnit->UploadUniformMatrix4fv("u_Model", model);
-        shaderUnit->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
-        shaderUnit->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-        shaderUnit->UploadUniformFloat4("u_CubeColor", cubeColor);
-        shaderUnit->UploadUniform1i("CubeMap", cubeTextureUnit);
-        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Unit);
+        // bind square buffer, upload square uniforms and draw square
+        VAO_Square->Bind();
+        shaderSquare->Bind();
+        shaderSquare->UploadUniformMatrix4fv("u_Model", squareModel);
+        shaderSquare->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
+        shaderSquare->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Square);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    //--------------------------------------------------------------------------------------------------------------
+    //
+    // OpenGL cleanup
+    //
+    //--------------------------------------------------------------------------------------------------------------
 
     // Cleanup Grid Buffers
     shaderGrid->~Shader();
@@ -562,13 +524,17 @@ unsigned AssignementApplication::Run() {
     VBO_Grid->~VertexBuffer();
     IBO_Grid->~IndexBuffer();
 
-    // Cleanup Cube Buffers
-    shaderCube->~Shader();
-    VAO_Cube->~VertexArray();
-    VBO_Grid->~VertexBuffer();
-    IBO_Cube->~IndexBuffer();
-
     // Cleanup Square Buffers
+    shaderSquare->~Shader();
+    VAO_Square->~VertexArray();
+    VBO_Square->~VertexBuffer();
+    IBO_Square->~IndexBuffer();
+
+    // Cleanup Unit Buffers
+    shaderUnit->~Shader();
+    VAO_Unit->~VertexArray();
+    VBO_Unit->~VertexBuffer();
+    IBO_Unit->~IndexBuffer();
 
     return stop();
 }

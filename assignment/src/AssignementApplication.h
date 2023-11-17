@@ -10,6 +10,7 @@
 #include "VertextArray.h"
 #include "Shader.h"
 #include "PerspectiveCamera.h"
+#include <glm/glm.hpp>
 
 enum Direction {
     UP,
@@ -31,6 +32,7 @@ private:
     bool hasMoved; // True when the player is moving the selection square
     bool hasCameraChanged; // True when the player is changing the camera rotation / zoom
     bool hasCubeSelected; // true if a cube is currently selected
+    bool toggleTexture; // toggle functionality to activate/deactivate textures and blending
 
     std::array<std::shared_ptr<VertexArray>, 8*8> cubes= {nullptr}; // A list of vertex array containing the cubes. To get a specific one, you can use the vertexArrayIdPerCoordinate
 
@@ -57,7 +59,7 @@ private:
      * @param opacity The opacity of the square (0 if there is a cube, 1 if there isn't a cube)
      * @return The content for the vertex buffer of the selection square
      */
-    [[nodiscard]] std::vector<float> createSelectionSquare(float opacity) const;
+    [[nodiscard]] std::vector<float> createSquare(float opacity) const;
 
     /** 
     creates a unit at the origin
@@ -88,6 +90,7 @@ public:
      * Function called when the player press any key on the keyboard
      */
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    void setTextureState();
     /**
      * Function called when the key callback want to use a function of the current_application
      * @return current_application

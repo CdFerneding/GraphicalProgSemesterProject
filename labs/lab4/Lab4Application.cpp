@@ -132,6 +132,8 @@ void Lab4Application::rotateCube(Direction direction) {
 std::vector<float> Lab4Application::createSelectionCube() const {
     float sideLength = 2.0f / static_cast<float>(numberOfSquare);
     float halfSideLength = sideLength * 0.5f;
+    sideLength = 1;
+    halfSideLength = 0.5;
 
     // cube centered around origin
     std::vector<float> selectionCube = {
@@ -254,7 +256,7 @@ unsigned Lab4Application::Run() {
 
     // Load Cube Map
     //TODO: loading the wood texture (all textures exept black-tile) does not work for the cubemap (whyever that might be).
-    bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/black-tile.jpg", 0, true);
+    bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/wood.jpg", 0, true);
     if (!successCube) {
         std::cout << "Cube Map not loaded correctly." << std::endl;
     }
@@ -320,6 +322,11 @@ unsigned Lab4Application::Run() {
             // Apply rotation to the cube
             model = glm::rotate(model, glm::radians(rotationAngleX), glm::vec3(1.0f, 0.0f, 0.0f));
             model = glm::rotate(model, glm::radians(rotationAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
+
+            // scaling
+            float scaleValue = 2.0f / static_cast<float>(numberOfSquare);
+            glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleValue, scaleValue, scaleValue));
+            model *= scaleMatrix;
 
             hasMoved = false;
             hasRotated = false;

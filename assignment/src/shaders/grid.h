@@ -1,6 +1,6 @@
 #include <string>
-#ifndef PROG2002_SHADERGRID_H
-#define PROG2002_SHADERGRID_H
+#ifndef PROG2002_GRID_H
+#define PROG2002_GRID_H
 
 // Vertex and fragment shader source code
 const std::string VS_Grid = R"(
@@ -31,22 +31,24 @@ const std::string FS_Grid = R"(
     in vec4 fragColor;
 
     uniform sampler2D uTexture;
+    uniform float u_TextureState;
 
     out vec4 color;
     
     void main()
     {
         // Sample the texture using the texture coordinates
-        vec4 texColor = texture(uTexture, fragTexCoords);
+        if(u_TextureState) {
+            vec4 texColor = texture(uTexture, fragTexCoords);
 
-        // Mix the color from the vertex attribute with the texture color
-        // Adjust the alpha value manually for mixing 
-        vec4 mixedColor = mix(fragColor, vec4(texColor.rgb, 1.0), 0.6);
-
-        // Output the final color
-        color = mixedColor;
+            // Mix the color from the vertex attribute with the texture color
+            // Adjust the alpha value manually for mixing 
+            color = mix(fragColor, vec4(texColor.rgb, u_Opacity), 0.6);
+        } else {
+            color = fragColor;
+        }
     }
 )";
 
 
-#endif //PROG2002_SHADERGRID_H
+#endif //PROG2002_GRID_H
