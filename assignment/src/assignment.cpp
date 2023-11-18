@@ -1,4 +1,4 @@
-#include "AssignementApplication.h"
+#include "assignment.h"
 // shader objects
 #include "shaders/grid.h"
 #include "shaders/square.h"
@@ -26,15 +26,11 @@ AssignementApplication::AssignementApplication(const std::string& name, const st
 
     currentXSelected = 0;
     currentYSelected = 0;
-    currentCubeSelected = -1;
 
     hasCameraChanged = false;
 
     hasMoved = false;
-    isUnitSelected = false;
     moveUnitFrom = {-1, -1};
-
-    shader = nullptr;
 
     toggleTexture = 0.0f;
 
@@ -65,6 +61,7 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
             getAssignementApplication()->move(RIGHT);
             break;
 
+        // handle square movement
         // There is two key for up and left because we are using a QWERTY and an AZERTY keyboard
         case GLFW_KEY_Z:
         case GLFW_KEY_W:
@@ -72,9 +69,6 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
 		    break;
         case GLFW_KEY_A:
             getAssignementApplication()->move(LEFT);
-            break;
-        case GLFW_KEY_Q:
-            getAssignementApplication()->exit();
             break;
         case GLFW_KEY_S:
             getAssignementApplication()->move(DOWN);
@@ -85,6 +79,11 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
             break;
+        // exit program
+        case GLFW_KEY_Q:
+            getAssignementApplication()->exit();
+            break;
+        // handle camera changes
         case GLFW_KEY_P:
             getAssignementApplication()->zoom(1.0f);
             break;
@@ -328,8 +327,9 @@ unsigned AssignementApplication::Run() {
     glm::mat4 squareModel = glm::mat4(1.0f);
 
     hasMoved = true;
-    bool isUnitSelected = false;
     bool setup = true; // for units in first iteration
+    bool isUnitSelected = false;
+    bool isOccupied = false;
 
     // Define a struct to store information about each unit
     struct UnitInfo {
@@ -390,42 +390,49 @@ unsigned AssignementApplication::Run() {
             }
             setup = false;
         }
-        bool isOccupied = false;
+
+
+        static bool enterKeyPressedLastFrame = false;
+        bool enterKeyPressed = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
 
         // update unitInfoVector.currentPosition if a square registered "Enter" / "isUnitSelected" / unit is being moved
-        if (isUnitSelected) {
+        if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && isUnitSelected) {
             for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
                 if (unitInfoVector[unitIndex].currentPosition[0] == currentXSelected && unitInfoVector[unitIndex].currentPosition[1] == currentYSelected) {
                     isOccupied = true;
                 }
             }
-            isUnitSelected = false;
             // only move if target square is empty
             if (!isOccupied) {
-                // find the correct unit that has been moved
+                // find the correct unit to move 
                 for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
                     // the the "moveunitfrom" position equals one unit.currentPosition we can move it to where the square currently is
                     if (unitInfoVector[unitIndex].currentPosition[0] == moveUnitFrom[0] && unitInfoVector[unitIndex].currentPosition[1] == moveUnitFrom[1]) {
                         std::cout << "cube moved from: " << unitInfoVector[unitIndex].currentPosition[0] << ", " << unitInfoVector[unitIndex].currentPosition[1] << " to: " << currentXSelected << ", " << currentYSelected << std::endl;
                         unitInfoVector[unitIndex].currentPosition = glm::vec2(currentXSelected, currentYSelected);
                         unitInfoVector[unitIndex].currentColor = unitInfoVector[unitIndex].previousColor;
-
+                        isUnitSelected = false;
+                        moveUnitFrom = { -1, -1 };
                     }
                 }
             }
         }
 
         // update unitColor when enter is hit on a cube
-        if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && isOccupied) {
+        if (enterKeyPressed && !enterKeyPressedLastFrame) {
             for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
                 // the the "moveunitfrom" position equals one unit.currentPosition we can move it to where the square currently is
-                if (unitInfoVector[unitIndex].currentPosition[0] == moveUnitFrom[0] && unitInfoVector[unitIndex].currentPosition[1] == moveUnitFrom[1]) {
+                if (unitInfoVector[unitIndex].currentPosition[0] == currentXSelected && unitInfoVector[unitIndex].currentPosition[1] == currentYSelected) {
+                    moveUnitFrom = { static_cast<int>(currentXSelected), static_cast<int>(currentYSelected) };
                     unitInfoVector[unitIndex].previousColor = unitInfoVector[unitIndex].currentColor; 
                     unitInfoVector[unitIndex].currentColor = glm::vec3(0.0f, 1.0f, 0.0f);
                     isUnitSelected = true;
                 }
             }
         }
+
+        enterKeyPressedLastFrame = enterKeyPressed; 
+
 
         // draw all 32 cubes according to their currentPosition when
         for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
@@ -451,7 +458,7 @@ unsigned AssignementApplication::Run() {
             
             VAO_Unit->Bind();
             shaderUnit->Bind();
-            shaderUnit->UploadUniformMatrix4fv("u_Model", unitModel);
+            shaderUnit->UploadUniformMatrix4fv("u_Model", unitModel * camera.GetViewProjectionMatrix());
             shaderUnit->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
             shaderUnit->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
             shaderUnit->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
@@ -486,7 +493,7 @@ unsigned AssignementApplication::Run() {
         // bind square buffer, upload square uniforms and draw square
         VAO_Square->Bind();
         shaderSquare->Bind();
-        shaderSquare->UploadUniformMatrix4fv("u_Model", squareModel);
+        shaderSquare->UploadUniformMatrix4fv("u_Model", squareModel * camera.GetViewProjectionMatrix());
         shaderSquare->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderSquare->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Square);
