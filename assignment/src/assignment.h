@@ -21,6 +21,13 @@ enum Direction {
 
 class AssignementApplication : public GLFWApplication {
 private:
+    // Define a struct to store information about each unit
+    struct UnitInfo {
+        glm::vec3 previousColor;
+        glm::vec3 currentColor;
+        glm::vec2 currentPosition;
+    };
+    std::vector<UnitInfo> unitInfoVector;
 
     unsigned int currentXSelected; // Current x position of the selector
     unsigned int currentYSelected; // Current y position of the selector
@@ -29,6 +36,7 @@ private:
 
     bool hasMoved; // True when the player is moving the selection square
     bool hasCameraChanged; // True when the player is changing the camera rotation / zoom
+    bool isUnitSelected;
     float toggleTexture; // toggle functionality to activate/deactivate textures and blending
 
     std::array<std::shared_ptr<VertexArray>, 8*8> cubes= {nullptr}; // A list of vertex array containing the cubes. To get a specific one, you can use the vertexArrayIdPerCoordinate
@@ -47,6 +55,7 @@ private:
     std::shared_ptr<VertexBuffer> VBO_SelectionSquare; // The vertex buffer of the selection square
     std::vector<float> selectionSquare; // The content of the vertexBufferSelectionSquare
 
+
     const unsigned int numberOfSquare = 8; // The number of square on the grid
 
     static AssignementApplication* current_application; // The current_application used for the communication with the key_callback
@@ -63,6 +72,9 @@ private:
     (neccessary to apply the cubemap)
     */
     std::vector<float> createUnit() const;
+    int selectUnit(); 
+    int moveUnit();
+    void setupUnits();
 
     /**
      * Function called when the player press Enter and want to move a cube (selecting the cube or setting the destination of the cube)

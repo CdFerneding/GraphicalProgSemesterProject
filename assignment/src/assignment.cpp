@@ -31,6 +31,7 @@ AssignementApplication::AssignementApplication(const std::string& name, const st
 
     hasMoved = false;
     moveUnitFrom = {-1, -1};
+    isUnitSelected = false;
 
     toggleTexture = 0.0f;
 
@@ -97,6 +98,10 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
             getAssignementApplication()->rotate(-5);
             // counter-clockwise rotation
             break;
+        // handle unit selection
+        case GLFW_KEY_ENTER:
+            getAssignementApplication()->select();
+            break;
         // toggle texturing/blending
         case GLFW_KEY_T:
             getAssignementApplication()->setTextureState();
@@ -109,6 +114,10 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
 
 void AssignementApplication::setTextureState() {
     toggleTexture = (toggleTexture == 0.0f) ? 1.0f : 0.0f;
+}
+
+void AssignementApplication::select() {
+    isUnitSelected = true;
 }
 
 void AssignementApplication::move(Direction direction) {
@@ -172,6 +181,79 @@ std::vector<float> AssignementApplication::createUnit() const {
         halfSideLength, -halfSideLength, halfSideLength,
     };
     return selectionCube;
+}
+
+int AssignementApplication::selectUnit()
+{
+    for (unsigned int outerIndex = 0; outerIndex < unitInfoVector.size(); outerIndex++) {
+        // the the "moveunitfrom" position equals one unit.currentPosition we can move it to where the square currently is
+        if (unitInfoVector[outerIndex].currentPosition[0] == currentXSelected && unitInfoVector[outerIndex].currentPosition[1] == currentYSelected) {
+            // only select this unit if no other unit is selected yet
+            bool selectOnlyOneUnit = true;
+            for (unsigned int innerIndex = 0; innerIndex < unitInfoVector.size(); innerIndex++) {
+                if (unitInfoVector[innerIndex].currentColor == glm::vec3(0.0f, 1.0f, 0.0f)) {
+                    selectOnlyOneUnit = false;
+                }
+            }
+            // if no other green unit has been found go further
+            if (selectOnlyOneUnit) {
+                moveUnitFrom = { static_cast<int>(currentXSelected), static_cast<int>(currentYSelected) };
+                unitInfoVector[outerIndex].previousColor = unitInfoVector[outerIndex].currentColor;
+                unitInfoVector[outerIndex].currentColor = glm::vec3(0.0f, 1.0f, 0.0f);
+                std::cout << "unit selected" << std::endl;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int AssignementApplication::moveUnit()
+{
+    // update unitInfoVector.currentPosition if a square registered "Enter" / "isUnitSelected" / unit is being moved
+    for (unsigned int outerLoop = 0; outerLoop < unitInfoVector.size(); outerLoop++) {
+        if (unitInfoVector[outerLoop].currentColor == glm::vec3(0.0f, 1.0f, 0.0f)) {
+            // check if any of the units occupy the current square
+            for (unsigned int innerLoop = 0; innerLoop < unitInfoVector.size(); innerLoop++) {
+                if (unitInfoVector[innerLoop].currentPosition[0] == currentXSelected && unitInfoVector[innerLoop].currentPosition[1] == currentYSelected) {
+                    std::cout << "cannot move there. square is occupied." << std::endl;
+                    return 0;
+                }
+            }
+            std::cout << "cube moved from: " << unitInfoVector[outerLoop].currentPosition[0] << ", " << unitInfoVector[outerLoop].currentPosition[1] << " to: " << currentXSelected << ", " << currentYSelected << std::endl;
+            unitInfoVector[outerLoop].currentPosition = glm::vec2(currentXSelected, currentYSelected);
+            unitInfoVector[outerLoop].currentColor = unitInfoVector[outerLoop].previousColor;
+            moveUnitFrom = { -1, -1 };
+            return 1;
+            
+        }
+    }
+    return 0;
+}
+
+
+void AssignementApplication::setupUnits()
+{
+    // init red team
+    for (unsigned int i = 0; i < numberOfSquare; i++) {
+        for (unsigned int j = 0; j < 2; j++) {
+            UnitInfo unitInfo;
+            unitInfo.currentColor = glm::vec3(1.0, 0.0, 0.0); // red
+            unitInfo.previousColor = unitInfo.currentColor;
+            unitInfo.currentPosition = glm::vec2(j, i);
+            unitInfoVector.push_back(unitInfo);
+        }
+    }
+    // init blue team
+    for (unsigned int i = 0; i < numberOfSquare; i++) {
+        for (unsigned int j = 0; j < 2; j++) {
+            UnitInfo unitInfo;
+            unitInfo.currentColor = glm::vec3(0.0, 0.0, 1.0); // blue
+            unitInfo.previousColor = unitInfo.currentColor;
+            unitInfo.currentPosition = glm::vec2(numberOfSquare - 1 - j, i);
+            unitInfoVector.push_back(unitInfo);
+        }
+    }
 }
 
 
@@ -328,16 +410,10 @@ unsigned AssignementApplication::Run() {
 
     hasMoved = true;
     bool setup = true; // for units in first iteration
-    bool isUnitSelected = false;
     bool isOccupied = false;
 
-    // Define a struct to store information about each unit
-    struct UnitInfo {
-        glm::vec3 previousColor;
-        glm::vec3 currentColor;
-        glm::vec2 currentPosition;
-    };
-    std::vector<UnitInfo> unitInfoVector; 
+    // initialization the units
+    setupUnits();
     while (!glfwWindowShouldClose(window))
     {
 
@@ -366,75 +442,16 @@ unsigned AssignementApplication::Run() {
         //
         // unit processing
         //
-        // changes to the square only in the first iteration
         //--------------------------------------------------------------------------------------------------------------
-        // initialization
-        if (setup) {
-            // init red team
-            for (unsigned int i = 0; i < numberOfSquare; i++) {
-                for (unsigned int j = 0; j < 2; j++) {
-                    UnitInfo unitInfo;
-                    unitInfo.currentColor = glm::vec3(1.0, 0.0, 0.0); // red
-                    unitInfo.currentPosition = glm::vec2(j, i);
-                    unitInfoVector.push_back(unitInfo);
-                }
-            }
-            // init blue team
-            for (unsigned int i = 0; i < numberOfSquare; i++) {
-                for (unsigned int j = 0; j < 2; j++) {
-                    UnitInfo unitInfo;
-                    unitInfo.currentColor = glm::vec3(0.0, 0.0, 1.0); // blue
-                    unitInfo.currentPosition = glm::vec2(numberOfSquare - 1 - j, i);
-                    unitInfoVector.push_back(unitInfo);
-                }
-            }
-            setup = false;
-        }
-
-
-        static bool enterKeyPressedLastFrame = false;
-        bool enterKeyPressed = (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS);
-
-        // update unitInfoVector.currentPosition if a square registered "Enter" / "isUnitSelected" / unit is being moved
-        if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && isUnitSelected) {
-            for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
-                if (unitInfoVector[unitIndex].currentPosition[0] == currentXSelected && unitInfoVector[unitIndex].currentPosition[1] == currentYSelected) {
-                    isOccupied = true;
-                }
-            }
-            // only move if target square is empty
-            if (!isOccupied) {
-                // find the correct unit to move 
-                for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
-                    // the the "moveunitfrom" position equals one unit.currentPosition we can move it to where the square currently is
-                    if (unitInfoVector[unitIndex].currentPosition[0] == moveUnitFrom[0] && unitInfoVector[unitIndex].currentPosition[1] == moveUnitFrom[1]) {
-                        std::cout << "cube moved from: " << unitInfoVector[unitIndex].currentPosition[0] << ", " << unitInfoVector[unitIndex].currentPosition[1] << " to: " << currentXSelected << ", " << currentYSelected << std::endl;
-                        unitInfoVector[unitIndex].currentPosition = glm::vec2(currentXSelected, currentYSelected);
-                        unitInfoVector[unitIndex].currentColor = unitInfoVector[unitIndex].previousColor;
-                        isUnitSelected = false;
-                        moveUnitFrom = { -1, -1 };
-                    }
-                }
-            }
-        }
-
         // update unitColor when enter is hit on a cube
-        if (enterKeyPressed && !enterKeyPressedLastFrame) {
-            for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
-                // the the "moveunitfrom" position equals one unit.currentPosition we can move it to where the square currently is
-                if (unitInfoVector[unitIndex].currentPosition[0] == currentXSelected && unitInfoVector[unitIndex].currentPosition[1] == currentYSelected) {
-                    moveUnitFrom = { static_cast<int>(currentXSelected), static_cast<int>(currentYSelected) };
-                    unitInfoVector[unitIndex].previousColor = unitInfoVector[unitIndex].currentColor; 
-                    unitInfoVector[unitIndex].currentColor = glm::vec3(0.0f, 1.0f, 0.0f);
-                    isUnitSelected = true;
-                }
-            }
+        if (isUnitSelected) {
+            selectUnit();
+            moveUnit();
+            isUnitSelected = false;
         }
 
-        enterKeyPressedLastFrame = enterKeyPressed; 
 
-
-        // draw all 32 cubes according to their currentPosition when
+        // draw all 32 cubes according to their currentPosition
         for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
             // unit information
             glm::vec3 currentUnitColor = unitInfoVector[unitIndex].currentColor;
