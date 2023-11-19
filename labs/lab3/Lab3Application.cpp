@@ -94,16 +94,16 @@ void Lab3Application::rotateCube(Direction direction) {
     hasRotated = true;
     switch (direction) {
         case UP:
-			rotationAngleX = ( (int) rotationAngleX + 5) % 360;
+			rotationAngleX = ( (int) rotationAngleX - 5) % 360;
 			break;
         case DOWN:
-            rotationAngleX = ((int) rotationAngleX - 5) % 360;
+            rotationAngleX = ((int) rotationAngleX + 5) % 360;
             break;
         case LEFT:
-			rotationAngleY = ((int) rotationAngleY + 5) % 360;
+			rotationAngleY = ((int) rotationAngleY - 5) % 360;
 			break;
         case RIGHT:
-			rotationAngleY = ((int) rotationAngleY - 5) % 360;
+			rotationAngleY = ((int) rotationAngleY + 5) % 360;
 			break;
 		default:
 			break;
@@ -143,8 +143,8 @@ std::vector<float> Lab3Application::createSelectionCube() const {
 
 unsigned Lab3Application::Run() {
     current_application = this;
-    hasRotated = false;
-    hasMoved = false;
+    hasRotated = true;
+    hasMoved = true;
 
     //auto triangle = GeometricTools::UnitGrid2D(numberOfSquare);
     auto triangle = GeometricTools::UnitGrid2DWithColor(numberOfSquare); //code with the color not in the shader

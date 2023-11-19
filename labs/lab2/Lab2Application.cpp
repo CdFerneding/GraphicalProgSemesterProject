@@ -156,10 +156,11 @@ unsigned Lab2Application::Run() {
                 vertexArray
         );
 
-        RenderCommands::DrawIndex(
-                GL_TRIANGLES,
-                vertexArrayCube
-        );
+        // drawing a cube above the chessboard (technically only part of the next lab)
+        /*RenderCommands::DrawIndex(
+            GL_TRIANGLES,
+            vertexArrayCube
+        );*/
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
