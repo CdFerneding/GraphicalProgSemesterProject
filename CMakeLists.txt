@@ -49,6 +49,10 @@ add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 add_subdirectory(external/tinyobjloader)
 
+# Add linmath.h on the tutorial of glfw
+add_library(linmath INTERFACE)
+target_include_directories(linmath INTERFACE external/linmath.h)
+
 # Create a header-only interface for the 'stb' library. Since 'stb' typically consists
 # of single-header libraries, this approach makes it easy to integrate into the project.
 add_library(stb INTERFACE)
@@ -62,14 +66,20 @@ add_subdirectory(examples/example_3)
 add_subdirectory(examples/example_4)
 add_subdirectory(examples/example_5)
 
-# Add a subdirectory for a labs. This line is commented out, possibly because the
-# labs is either under development or optional.
-# add_subdirectory(labs)
-
 # Add a subdirectory for a framework. This line is commented out, possibly because the
 # framework is either under development or optional.
-# add_subdirectory(framework)
+add_subdirectory(framework)
+
+# Add a subdirectory for a labs. This line is commented out, possibly because the
+# labs is either under development or optional.
+add_subdirectory(labs/tuto_lab1_glfw)
+add_subdirectory(labs/lab2)
+add_subdirectory(labs/lab1)
+add_subdirectory(labs/lab3)
+add_subdirectory(labs/lab4)
+add_subdirectory(labs/lab5)
+
 
 # Add a subdirectory for assignments. Like the framework, this is commented out,
 # potentially to be enabled later when assignments are ready.
-# add_subdirectory(assignment)
+add_subdirectory(assignment)
