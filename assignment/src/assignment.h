@@ -38,7 +38,6 @@ private:
     PerspectiveCamera camera; //The perspective camera used
 
     bool hasMoved; // True when the player is moving the selection square
-    bool hasCameraChanged; // True when the player is changing the camera rotation / zoom
     bool isUnitSelected;
     float toggleTexture; // toggle functionality to activate/deactivate textures and blending
 

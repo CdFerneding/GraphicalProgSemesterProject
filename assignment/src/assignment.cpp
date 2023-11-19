@@ -27,8 +27,6 @@ AssignementApplication::AssignementApplication(const std::string& name, const st
     currentXSelected = 0;
     currentYSelected = 0;
 
-    hasCameraChanged = false;
-
     hasMoved = false;
     moveUnitFrom = {-1, -1};
     isUnitSelected = false;
@@ -143,12 +141,10 @@ void AssignementApplication::move(Direction direction) {
 
 void AssignementApplication::rotate(float degree) {
     camera.rotateArroundLookAt(degree);
-    hasCameraChanged = true;
 }
 
 void AssignementApplication::zoom(float zoomValue) {
     camera.zoom(zoomValue);
-    hasCameraChanged = true;
 }
 
 std::vector<float> AssignementApplication::createSquare(float opacity) const {
@@ -212,12 +208,15 @@ int AssignementApplication::moveUnit()
 {
     // update unitInfoVector.currentPosition if a square registered "Enter" / "isUnitSelected" / unit is being moved
     for (unsigned int outerLoop = 0; outerLoop < unitInfoVector.size(); outerLoop++) {
-        if (unitInfoVector[outerLoop].currentColor == colorUnitSelected) {
+        if (unitInfoVector[outerLoop].selected == true) {
             // check if any of the units occupy the current square
             for (unsigned int innerLoop = 0; innerLoop < unitInfoVector.size(); innerLoop++) {
                 if (unitInfoVector[innerLoop].currentPosition[0] == currentXSelected && unitInfoVector[innerLoop].currentPosition[1] == currentYSelected) {
                     std::cout << "cannot move there. square is occupied." << std::endl;
-                    return 0;
+                    unitInfoVector[outerLoop].selected = false;
+                    // return 1 to not call selectUnit after this
+                    // otherwise the unit that is currently blocking the movement would get selected
+                    return 1;
                 }
             }
             std::cout << "unit moved from: " << unitInfoVector[outerLoop].currentPosition[0] << ", " << unitInfoVector[outerLoop].currentPosition[1] << " to: " << currentXSelected << ", " << currentYSelected << std::endl;
@@ -263,7 +262,6 @@ void AssignementApplication::setupUnits()
 unsigned AssignementApplication::Run() {
 
     current_application = this;
-    hasCameraChanged = false;
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -447,13 +445,16 @@ unsigned AssignementApplication::Run() {
         //--------------------------------------------------------------------------------------------------------------
         // update unitColor when enter is hit on a cube
         if (isUnitSelected) {
-            selectUnit();
-            moveUnit();
+            // callmove unit first otherwise the selected unit would instantly try to move to the current square 
+            // which is occupied (by itself) and therefore canceling the move
+            if (!moveUnit()) {
+                selectUnit();
+            }
             isUnitSelected = false;
         }
 
 
-        // draw all 32 cubes according to their currentPosition
+        // draw all 32 cubes according to their currentPosition and selected state
         for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
             // unit information
             glm::vec3 currentUnitColor;
