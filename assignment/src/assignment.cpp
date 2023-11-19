@@ -355,11 +355,14 @@ unsigned AssignementApplication::Run() {
     //
     //--------------------------------------------------------------------------------------------------------------
     // Use PerspectiveCamera class instead
-    PerspectiveCamera camera = PerspectiveCamera( 
-        PerspectiveCamera::Frustrum{ glm::radians(45.0f), 1.0f, 1.0f, 1.0f, -10.0f }, // frustrum
+    camera = PerspectiveCamera(
+        PerspectiveCamera::Frustrum{ glm::radians(45.0f), 1.0f, 1.0f, 1.0f, 10.0f }, // frustrum
         glm::vec3(0.0f, -3.0f, 2.0f), // camera position
         glm::vec3(0.0f, 0.0f, 0.0f), // lookAt
-        glm::vec3(0.0f, 1.0f, 0.0f)); // upVector 
+        glm::vec3(0.0f, 0.0f, 1.0f) // upVector
+    );
+
+
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -474,7 +477,7 @@ unsigned AssignementApplication::Run() {
 
             // bind Unit Buffers, upload unit uniforms and draw unit
             // range: [0,1]
-            float unitOpacity = 0.7;
+            float unitOpacity = 0.8;
             
             VAO_Unit->Bind();
             shaderUnit->Bind();
