@@ -6,9 +6,6 @@
 const std::string VS_Square = R"(
     #version 430 core
     layout(location = 0) in vec3 position;
-    layout(location = 1) in vec4 color;
-
-    out vec4 fragColor;
 
     uniform mat4 u_Model;
     uniform mat4 u_View;
@@ -16,7 +13,6 @@ const std::string VS_Square = R"(
 
     void main()
     {
-        fragColor = color;
         gl_Position = u_Projection * u_View * u_Model * vec4(position, 1.0);
     }
 )";
@@ -24,13 +20,14 @@ const std::string VS_Square = R"(
 const std::string FS_Square = R"(
     #version 430 core
 
-    in vec4 fragColor;
+    uniform vec3 u_Color;
+    uniform float u_Opacity;
 
     out vec4 color;
     
     void main()
     {
-        color = fragColor;
+        color = vec4(u_Color.rgb, u_Opacity);
     }
 )";
 

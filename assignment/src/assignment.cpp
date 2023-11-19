@@ -156,10 +156,10 @@ std::vector<float> AssignementApplication::createSquare(float opacity) const {
     float halfSideLength = sideLength * 0.5f;
 
     std::vector<float> newSelectionSquare = {
-            -halfSideLength, -halfSideLength, 0.0f, 0.0f, 1.0f, 0.0f, opacity,
-            -halfSideLength, +halfSideLength, 0.0f, 0.0f, 1.0f, 0.0f, opacity,
-            +halfSideLength, +halfSideLength, 0.0f, 0.0f, 1.0f, 0.0f, opacity,
-            +halfSideLength, -halfSideLength, 0.0f, 0.0f, 1.0f, 0.0f, opacity
+            -halfSideLength, -halfSideLength, 0.0f, // 0.0f, 1.0f, 0.0f, opacity,
+            -halfSideLength, +halfSideLength, 0.0f, // 0.0f, 1.0f, 0.0f, opacity,
+            +halfSideLength, +halfSideLength, 0.0f, // 0.0f, 1.0f, 0.0f, opacity,
+            +halfSideLength, -halfSideLength, 0.0f, // 0.0f, 1.0f, 0.0f, opacity
     };
 
     return newSelectionSquare;
@@ -191,16 +191,16 @@ int AssignementApplication::selectUnit()
             // only select this unit if no other unit is selected yet
             bool selectOnlyOneUnit = true;
             for (unsigned int innerIndex = 0; innerIndex < unitInfoVector.size(); innerIndex++) {
-                if (unitInfoVector[innerIndex].currentColor == glm::vec3(0.0f, 1.0f, 0.0f)) {
+                if (unitInfoVector[innerIndex].selected == true) {
                     selectOnlyOneUnit = false;
                 }
             }
-            // if no other green unit has been found go further
+            // if no other selected unit has been found go further
             if (selectOnlyOneUnit) {
                 moveUnitFrom = { static_cast<int>(currentXSelected), static_cast<int>(currentYSelected) };
-                unitInfoVector[outerIndex].previousColor = unitInfoVector[outerIndex].currentColor;
-                unitInfoVector[outerIndex].currentColor = glm::vec3(0.0f, 1.0f, 0.0f);
-                std::cout << "unit selected" << std::endl;
+                unitInfoVector[outerIndex].currentColor = colorUnitSelected;
+                unitInfoVector[outerIndex].selected = true;
+                std::cout << "unit selected." << std::endl;
                 return 1;
             }
         }
@@ -212,7 +212,7 @@ int AssignementApplication::moveUnit()
 {
     // update unitInfoVector.currentPosition if a square registered "Enter" / "isUnitSelected" / unit is being moved
     for (unsigned int outerLoop = 0; outerLoop < unitInfoVector.size(); outerLoop++) {
-        if (unitInfoVector[outerLoop].currentColor == glm::vec3(0.0f, 1.0f, 0.0f)) {
+        if (unitInfoVector[outerLoop].currentColor == colorUnitSelected) {
             // check if any of the units occupy the current square
             for (unsigned int innerLoop = 0; innerLoop < unitInfoVector.size(); innerLoop++) {
                 if (unitInfoVector[innerLoop].currentPosition[0] == currentXSelected && unitInfoVector[innerLoop].currentPosition[1] == currentYSelected) {
@@ -220,10 +220,11 @@ int AssignementApplication::moveUnit()
                     return 0;
                 }
             }
-            std::cout << "cube moved from: " << unitInfoVector[outerLoop].currentPosition[0] << ", " << unitInfoVector[outerLoop].currentPosition[1] << " to: " << currentXSelected << ", " << currentYSelected << std::endl;
+            std::cout << "unit moved from: " << unitInfoVector[outerLoop].currentPosition[0] << ", " << unitInfoVector[outerLoop].currentPosition[1] << " to: " << currentXSelected << ", " << currentYSelected << std::endl;
             unitInfoVector[outerLoop].currentPosition = glm::vec2(currentXSelected, currentYSelected);
-            unitInfoVector[outerLoop].currentColor = unitInfoVector[outerLoop].previousColor;
+            unitInfoVector[outerLoop].currentColor = unitInfoVector[outerLoop].teamColor;
             moveUnitFrom = { -1, -1 };
+            unitInfoVector[outerLoop].selected = false;
             return 1;
             
         }
@@ -239,8 +240,9 @@ void AssignementApplication::setupUnits()
         for (unsigned int j = 0; j < 2; j++) {
             UnitInfo unitInfo;
             unitInfo.currentColor = glm::vec3(1.0, 0.0, 0.0); // red
-            unitInfo.previousColor = unitInfo.currentColor;
+            unitInfo.teamColor = unitInfo.currentColor;
             unitInfo.currentPosition = glm::vec2(j, i);
+            unitInfo.selected = false;
             unitInfoVector.push_back(unitInfo);
         }
     }
@@ -249,8 +251,9 @@ void AssignementApplication::setupUnits()
         for (unsigned int j = 0; j < 2; j++) {
             UnitInfo unitInfo;
             unitInfo.currentColor = glm::vec3(0.0, 0.0, 1.0); // blue
-            unitInfo.previousColor = unitInfo.currentColor;
+            unitInfo.teamColor = unitInfo.currentColor;
             unitInfo.currentPosition = glm::vec2(numberOfSquare - 1 - j, i);
+            unitInfo.selected = false;
             unitInfoVector.push_back(unitInfo);
         }
     }
@@ -293,7 +296,6 @@ unsigned AssignementApplication::Run() {
     // selectionSquareLayout
     auto squareLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false}, 
-        {ShaderDataType::Float4, "color", false},
         }));
 
     // cube Layout
@@ -454,7 +456,13 @@ unsigned AssignementApplication::Run() {
         // draw all 32 cubes according to their currentPosition
         for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
             // unit information
-            glm::vec3 currentUnitColor = unitInfoVector[unitIndex].currentColor;
+            glm::vec3 currentUnitColor;
+            currentUnitColor = unitInfoVector[unitIndex].teamColor;
+            if (unitInfoVector[unitIndex].selected == true) {
+                currentUnitColor = colorUnitSelected;
+            } else if (unitInfoVector[unitIndex].currentPosition[0] == currentXSelected && unitInfoVector[unitIndex].currentPosition[1] == currentYSelected) {
+                currentUnitColor = colorUnitHover;
+            }
             glm::vec2 currentPosition = unitInfoVector[unitIndex].currentPosition;
 
             // helper
@@ -491,6 +499,15 @@ unsigned AssignementApplication::Run() {
         // square processing
         //
         //--------------------------------------------------------------------------------------------------------------
+        glm::vec3 squareColor = glm::vec3(0.0f, 1.0f, 0.0f);
+        float squareOpacity = 1.0f;
+        // check if the current square has a unit on it
+        for (unsigned int unitIndex = 0; unitIndex < unitInfoVector.size(); unitIndex++) {
+            if (unitInfoVector[unitIndex].currentPosition[0] == currentXSelected && unitInfoVector[unitIndex].currentPosition[1] == currentYSelected) {
+                squareOpacity = 0.0f;
+                break;
+            }
+        }
         if (hasMoved) {
             // helper
             float sideLength = 2.0f / static_cast<float>(numberOfSquare);
@@ -513,6 +530,8 @@ unsigned AssignementApplication::Run() {
         shaderSquare->UploadUniformMatrix4fv("u_Model", squareModel * camera.GetViewProjectionMatrix());
         shaderSquare->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderSquare->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+        shaderSquare->UploadUniformFloat3("u_Color", squareColor);
+        shaderSquare->UploadUniformFloat1("u_Opacity", squareOpacity);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Square);
 
         // Swap front and back buffers
@@ -524,6 +543,8 @@ unsigned AssignementApplication::Run() {
     //
     // OpenGL cleanup
     //
+    // theoretically not neccessary since destructors should be called automatically after variables go out of scope
+    // but you never know with OpenGL
     //--------------------------------------------------------------------------------------------------------------
 
     // Cleanup Grid Buffers

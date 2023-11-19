@@ -23,11 +23,14 @@ class AssignementApplication : public GLFWApplication {
 private:
     // Define a struct to store information about each unit
     struct UnitInfo {
-        glm::vec3 previousColor;
+        glm::vec3 teamColor;
         glm::vec3 currentColor;
         glm::vec2 currentPosition;
+        bool selected;
     };
     std::vector<UnitInfo> unitInfoVector;
+    glm::vec3 colorUnitSelected = glm::vec3(1.0f, 1.0f, 0.0f);
+    glm::vec3 colorUnitHover = glm::vec3(0.0f, 1.0f, 0.0f);
 
     unsigned int currentXSelected; // Current x position of the selector
     unsigned int currentYSelected; // Current y position of the selector
