@@ -255,8 +255,7 @@ unsigned Lab4Application::Run() {
     GLuint gridTextureUnit = textureManager->GetUnitByName("gridTexture"); 
 
     // Load Cube Map
-    //TODO: loading the wood texture (all textures exept black-tile) does not work for the cubemap (whyever that might be).
-    bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/wood.jpg", 0, true);
+    bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/black-tile.jpg", 1, true);
     if (!successCube) {
         std::cout << "Cube Map not loaded correctly." << std::endl;
     }
