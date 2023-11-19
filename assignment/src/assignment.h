@@ -10,6 +10,7 @@
 #include "VertextArray.h"
 #include "Shader.h"
 #include "PerspectiveCamera.h"
+#include <glm/glm.hpp>
 
 enum Direction {
     UP,
@@ -21,32 +22,30 @@ enum Direction {
 class AssignementApplication : public GLFWApplication {
 private:
 
+    // struct to store information about each unit
+    struct UnitInfo {
+        glm::vec3 teamColor;
+        glm::vec3 currentColor;
+        glm::vec2 currentPosition;
+        bool selected;
+    };
+    std::vector<UnitInfo> unitInfoVector;
+    // unit color variables
+    glm::vec3 colorTeam1 = glm::vec3(1.0, 0.0, 0.0); // red
+    glm::vec3 colorTeam2 = glm::vec3(0.0, 0.0, 1.0); // blue
+    glm::vec3 colorUnitSelected = glm::vec3(1.0f, 1.0f, 0.0f);
+    glm::vec3 colorUnitHover = glm::vec3(0.0f, 1.0f, 0.0f);
+
     unsigned int currentXSelected; // Current x position of the selector
     unsigned int currentYSelected; // Current y position of the selector
-    unsigned int currentCubeSelected; //idx of the cube selected
 
-    Shader *shader; // The shaders used
     PerspectiveCamera camera; //The perspective camera used
 
     bool hasMoved; // True when the player is moving the selection square
-    bool hasCameraChanged; // True when the player is changing the camera rotation / zoom
-    bool hasCubeSelected; // true if a cube is currently selected
+    bool isUnitSelected;
+    float toggleTexture; // toggle functionality to activate/deactivate textures and blending
 
-    std::array<std::shared_ptr<VertexArray>, 8*8> cubes= {nullptr}; // A list of vertex array containing the cubes. To get a specific one, you can use the vertexArrayIdPerCoordinate
-
-    int vertexArrayIdPerCoordinate[8][8] = {{-1},}; // An array containing the vertexArrayId used by a cube for a specific coordinate
-
-    std::vector<std::shared_ptr<VertexArray>> vertexArrays; // A list of vertex array. To get a specific one, you can use the vertexArrayIdPerCoordinate
-
-    std::vector<bool> colorVertexArrays; // An array containing the color of each cube according to his vertexArrayId
-
-    std::shared_ptr<VertexArray> currentSelectedVertexArray; // The vertex array of the selected cube
-
-    std::array<int, 2> previousPosition; // Contain the previous position of the selected cube, (-1,-1) otherwise
-    std::array<unsigned, 2> previousPositionSelector; // The previous position of the selection square
-
-    std::shared_ptr<VertexBuffer> vertexBufferSelectionSquare; // The vertex buffer of the selection square
-    std::vector<float> selectionSquare; // The content of the vertexBufferSelectionSquare
+    std::array<int, 2> moveUnitFrom; // Contain the previous position of the selected cube, (-1,-1) otherwise
 
     const unsigned int numberOfSquare = 8; // The number of square on the grid
 
@@ -57,25 +56,21 @@ private:
      * @param opacity The opacity of the square (0 if there is a cube, 1 if there isn't a cube)
      * @return The content for the vertex buffer of the selection square
      */
-    [[nodiscard]] std::vector<float> createSelectionSquare(float opacity) const;
+    [[nodiscard]] std::vector<float> createSquare(float opacity) const;
 
-    /**
-     * Create a cube for a specific coordinate with a specific color
-     * @param r Red value between 0 and 1
-     * @param g Green value between 0 and 1
-     * @param b Blue value between 0 and 1
-     * @param x X coordinate
-     * @param y Y Coordinate
-     * @return
-     */
-    [[nodiscard]] std::vector<float> createCube(float r, float g, float b, unsigned int x, unsigned int y) const;
+    /** 
+    function to handle units
+    */
+    std::vector<float> createUnit() const;
+    void setupUnits(); 
+    int selectUnit(); 
+    int moveUnit();
 
-    /**
-     * Function called when the player press Enter and want to move a cube (selecting the cube or setting the destination of the cube)
-     */
-    void moveCubeRequest();
+    // function to toggle texture State
+    void setTextureState();
+
 public:
-    explicit AssignementApplication(const std::string& name = "Lab3", const std::string& version = "0.0.1",
+    explicit AssignementApplication(const std::string& name = "assignment", const std::string& version = "0.0.1",
         unsigned int width = 800, unsigned int height = 600);
 
     ~AssignementApplication();

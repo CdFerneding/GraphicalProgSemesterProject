@@ -31,7 +31,6 @@ private:
     // handle cube color changes
     static glm::vec4 cubeColor;
 
-    std::vector<float> createSelectionSquare() const;
     std::vector<float> createSelectionCube() const;
 public:
     explicit Lab4Application(const std::string& name = "Lab4", const std::string& version = "0.0.1",

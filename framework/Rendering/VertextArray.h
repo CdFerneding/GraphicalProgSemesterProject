@@ -32,7 +32,7 @@ public:
     const unsigned int getNumberOfVertexBuffers() const { return VertexBuffers.size(); }
 
 private:
-    GLuint m_vertexArrayID;
+    GLuint m_vertexArrayID = 0;
     std::vector<std::shared_ptr<VertexBuffer>> VertexBuffers;
     std::shared_ptr<IndexBuffer> IdxBuffer;
 

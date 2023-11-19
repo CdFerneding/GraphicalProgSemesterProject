@@ -132,6 +132,8 @@ void Lab4Application::rotateCube(Direction direction) {
 std::vector<float> Lab4Application::createSelectionCube() const {
     float sideLength = 2.0f / static_cast<float>(numberOfSquare);
     float halfSideLength = sideLength * 0.5f;
+    sideLength = 1;
+    halfSideLength = 0.5;
 
     // cube centered around origin
     std::vector<float> selectionCube = {
@@ -220,10 +222,8 @@ unsigned Lab4Application::Run() {
     //--------------------------------------------------------------------------------------------------------------
     // Grid shader
     auto* shaderGrid = new Shader(VS_Grid, FS_Grid);
-    shaderGrid->Bind();
     // Cube
     auto* shaderCube = new Shader(VS_Cube, FS_Cube);
-    shaderCube->Bind();
 
 
     //--------------------------------------------------------------------------------------------------------------
@@ -256,7 +256,7 @@ unsigned Lab4Application::Run() {
 
     // Load Cube Map
     //TODO: loading the wood texture (all textures exept black-tile) does not work for the cubemap (whyever that might be).
-    bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/black-tile.jpg", 0, true);
+    bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/wood.jpg", 0, true);
     if (!successCube) {
         std::cout << "Cube Map not loaded correctly." << std::endl;
     }
@@ -299,7 +299,7 @@ unsigned Lab4Application::Run() {
         shaderGrid->UploadUniformMatrix4fv("u_Model", camera.GetViewProjectionMatrix()); 
         shaderGrid->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderGrid->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-        shaderGrid->UploadUniform1i("uTexture", gridTextureUnit);
+        shaderGrid->UploadUniform1i("u_Texture", gridTextureUnit);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Grid);
 
         // handle cube rotation, translations with the model matrix
@@ -322,6 +322,11 @@ unsigned Lab4Application::Run() {
             // Apply rotation to the cube
             model = glm::rotate(model, glm::radians(rotationAngleX), glm::vec3(1.0f, 0.0f, 0.0f));
             model = glm::rotate(model, glm::radians(rotationAngleY), glm::vec3(0.0f, 1.0f, 0.0f));
+
+            // scaling
+            float scaleValue = 2.0f / static_cast<float>(numberOfSquare);
+            glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleValue, scaleValue, scaleValue));
+            model *= scaleMatrix;
 
             hasMoved = false;
             hasRotated = false;

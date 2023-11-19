@@ -64,6 +64,12 @@ void Shader::UploadUniformFloat2(const std::string& name, const glm::vec2& vecto
     glUniform2f(location, vector.x, vector.y);
 }
 
+void Shader::UploadUniformFloat3(const std::string& name, const glm::vec3& vector)
+{
+    GLuint location = glGetUniformLocation(ShaderProgram, name.c_str());
+    glUniform3f(location, vector[0], vector[1], vector[2]);
+}
+
 void Shader::UploadUniformFloat4(const std::string& name, const glm::vec4& vector)
 {
     GLuint location = glGetUniformLocation(ShaderProgram, name.c_str());

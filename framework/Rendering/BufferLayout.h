@@ -10,7 +10,7 @@ class BufferLayout {
     public:
         BufferLayout() {}
         BufferLayout(const std::initializer_list<BufferAttribute> &attributes)
-                : Attributes(attributes) {
+                : Attributes(attributes), Stride(0) {
             this->CalculateOffsetAndStride();
         }
 
