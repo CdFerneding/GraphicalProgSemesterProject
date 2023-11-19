@@ -32,12 +32,6 @@ AssignementApplication::AssignementApplication(const std::string& name, const st
     isUnitSelected = false;
 
     toggleTexture = 0.0f;
-
-    for(int i=0; i < numberOfSquare; i++) {
-        for(int j=0; j < numberOfSquare; j++) {
-            vertexArrayIdPerCoordinate[i][j] = -1;
-        }
-    }
 }
 
 AssignementApplication::~AssignementApplication() = default;
@@ -47,6 +41,7 @@ void AssignementApplication::key_callback(GLFWwindow* window, int key, int scanc
 
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         switch (key) {
+        // move selection square
         case GLFW_KEY_UP:
             getAssignementApplication()->move(UP);
             break;
@@ -179,6 +174,32 @@ std::vector<float> AssignementApplication::createUnit() const {
     return selectionCube;
 }
 
+void AssignementApplication::setupUnits()
+{
+    // init red team
+    for (unsigned int i = 0; i < numberOfSquare; i++) {
+        for (unsigned int j = 0; j < 2; j++) {
+            UnitInfo unitInfo;
+            unitInfo.currentColor = colorTeam1;
+            unitInfo.teamColor = unitInfo.currentColor;
+            unitInfo.currentPosition = glm::vec2(j, i);
+            unitInfo.selected = false;
+            unitInfoVector.push_back(unitInfo);
+        }
+    }
+    // init blue team
+    for (unsigned int i = 0; i < numberOfSquare; i++) {
+        for (unsigned int j = 0; j < 2; j++) {
+            UnitInfo unitInfo;
+            unitInfo.currentColor = colorTeam2;
+            unitInfo.teamColor = unitInfo.currentColor;
+            unitInfo.currentPosition = glm::vec2(numberOfSquare - 1 - j, i);
+            unitInfo.selected = false;
+            unitInfoVector.push_back(unitInfo);
+        }
+    }
+}
+
 int AssignementApplication::selectUnit()
 {
     for (unsigned int outerIndex = 0; outerIndex < unitInfoVector.size(); outerIndex++) {
@@ -232,36 +253,9 @@ int AssignementApplication::moveUnit()
 }
 
 
-void AssignementApplication::setupUnits()
-{
-    // init red team
-    for (unsigned int i = 0; i < numberOfSquare; i++) {
-        for (unsigned int j = 0; j < 2; j++) {
-            UnitInfo unitInfo;
-            unitInfo.currentColor = glm::vec3(1.0, 0.0, 0.0); // red
-            unitInfo.teamColor = unitInfo.currentColor;
-            unitInfo.currentPosition = glm::vec2(j, i);
-            unitInfo.selected = false;
-            unitInfoVector.push_back(unitInfo);
-        }
-    }
-    // init blue team
-    for (unsigned int i = 0; i < numberOfSquare; i++) {
-        for (unsigned int j = 0; j < 2; j++) {
-            UnitInfo unitInfo;
-            unitInfo.currentColor = glm::vec3(0.0, 0.0, 1.0); // blue
-            unitInfo.teamColor = unitInfo.currentColor;
-            unitInfo.currentPosition = glm::vec2(numberOfSquare - 1 - j, i);
-            unitInfo.selected = false;
-            unitInfoVector.push_back(unitInfo);
-        }
-    }
-}
-
-
 unsigned AssignementApplication::Run() {
 
-    current_application = this;
+    current_application = this; 
 
     //--------------------------------------------------------------------------------------------------------------
     //
