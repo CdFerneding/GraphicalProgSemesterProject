@@ -19,7 +19,7 @@ add_executable(assignment src/main.cpp src/assignment.cpp src/assignment.h "src/
 # - glad: A library to load OpenGL extensions.
 # - OpenGL::GL: This is an imported target for the main OpenGL library
 #               provided by the find_package(OpenGL) command.
-target_link_libraries(${PROJECT_NAME} PRIVATE Framework::GLFWApplication Framework::Rendering glfw glad OpenGL::GL stb)
+target_link_libraries(${PROJECT_NAME} PRIVATE Framework::GLFWApplication Framework::Rendering glfw glad OpenGL::GL stb Framework::GeometricTools)
 
 # Define a preprocessor macro for the STB image library
 target_compile_definitions(${PROJECT_NAME}

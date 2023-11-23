@@ -4,14 +4,14 @@
 #include "shaders/square.h"
 #include "shaders/unit.h"
 // rendering framework
-#include "./../GeometricTools/GeometricTools.h"
-#include "../../framework/Rendering/IndexBuffer.h"
-#include "./../Rendering/VertexBuffer.h"
+#include "GeometricTools.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
 #include "VertextArray.h"
-#include "../../framework/Rendering/Shader.h"
+#include "Shader.h"
 #include "OrthographicCamera.h"
 #include "PerspectiveCamera.h"
-#include "./../Rendering/TextureManager.h"
+#include "TextureManager.h"
 #include <RenderCommands.h>
 // libraries
 #include <glm/glm.hpp>
