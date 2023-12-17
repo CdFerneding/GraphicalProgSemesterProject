@@ -338,16 +338,9 @@ unsigned AssignementApplication::Run() {
     // Shader module
     //
     //--------------------------------------------------------------------------------------------------------------
-    // grid shader
-    auto* shaderGrid = new Shader(VS_Grid, FS_Grid);
-    shaderGrid->Bind();
-    // square shader
-    auto* shaderSquare = new Shader(VS_Square, FS_Square);
-    shaderSquare->Bind();
-    // cube shader
-    auto* shaderUnit = new Shader(VS_Unit, FS_Unit);
-    shaderUnit->Bind();
-
+    std::unique_ptr<Shader> shaderGrid = std::make_unique<Shader>(VS_Grid, FS_Grid);
+    std::unique_ptr<Shader> shaderSquare = std::make_unique<Shader>(VS_Square, FS_Square);
+    std::unique_ptr<Shader> shaderUnit = std::make_unique<Shader>(VS_Unit, FS_Unit); 
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -536,32 +529,6 @@ unsigned AssignementApplication::Run() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    //--------------------------------------------------------------------------------------------------------------
-    //
-    // OpenGL cleanup
-    //
-    // theoretically not neccessary since destructors should be called automatically after variables go out of scope
-    // but you never know with OpenGL
-    //--------------------------------------------------------------------------------------------------------------
-
-    // Cleanup Grid Buffers
-    shaderGrid->~Shader();
-    VAO_Grid->~VertexArray();
-    VBO_Grid->~VertexBuffer();
-    IBO_Grid->~IndexBuffer();
-
-    // Cleanup Square Buffers
-    shaderSquare->~Shader();
-    VAO_Square->~VertexArray();
-    VBO_Square->~VertexBuffer();
-    IBO_Square->~IndexBuffer();
-
-    // Cleanup Unit Buffers
-    shaderUnit->~Shader();
-    VAO_Unit->~VertexArray();
-    VBO_Unit->~VertexBuffer();
-    IBO_Unit->~IndexBuffer();
 
     return stop();
 }
